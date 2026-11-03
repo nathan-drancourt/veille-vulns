@@ -27,6 +27,8 @@ jobs:
       url: ${{ steps.deploiement.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main   # dernière version, avec l'état enregistré par la collecte précédente
 
       - name: Collecter CERT-FR, CISA KEV, NVD, EPSS
         shell: pwsh
@@ -44,6 +46,7 @@ jobs:
           # Un commit a pu arriver pendant la collecte : on se recale dessus avant d'envoyer
           for essai in 1 2 3; do
             git pull --rebase origin main && git push && exit 0
+            git rebase --abort 2>/dev/null || true
             sleep $((essai * 5))
           done
           exit 1
