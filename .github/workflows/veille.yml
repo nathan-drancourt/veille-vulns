@@ -1,0 +1,50 @@
+# Collecte les vulnérabilités toutes les 4 heures et publie le site sur GitHub Pages.
+name: Veille vulnérabilités
+
+on:
+  schedule:
+    - cron: '17 */4 * * *'   # toutes les 4 h (heure UTC), à la 17e minute pour éviter l'heure pile
+  workflow_dispatch:          # bouton « Run workflow » dans l'onglet Actions
+  push:
+    branches: [main]
+    paths-ignore: ['etat/**', '**.md']
+
+permissions:
+  contents: write   # enregistrer etat/premieres-vues.json
+  pages: write
+  id-token: write
+
+concurrency:
+  group: veille
+  cancel-in-progress: false
+
+jobs:
+  collecte:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collecter CERT-FR, CISA KEV, NVD, EPSS
+        shell: pwsh
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}   # facultatif, accélère la NVD
+        run: ./collecteur/Veille.ps1
+
+      - name: Enregistrer les premières vues
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add etat/
+          git diff --cached --quiet || git commit -m "Veille : nouveaux éléments"
+          git push
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deploiement
+        uses: actions/deploy-pages@v4
