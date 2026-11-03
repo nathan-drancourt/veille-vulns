@@ -39,8 +39,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add etat/
-          git diff --cached --quiet || git commit -m "Veille : nouveaux éléments"
-          git push
+          git diff --cached --quiet && exit 0
+          git commit -m "Veille : nouveaux éléments"
+          # Un commit a pu arriver pendant la collecte : on se recale dessus avant d'envoyer
+          for essai in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            sleep $((essai * 5))
+          done
+          exit 1
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
