@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Veille vulnérabilités</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Mise en page : console de tri — résumé chiffré, barre de filtres collante, file d'éléments à bande de sévérité */
+:root {
+  --fond: #eef1f5; --surface: #ffffff; --surface-2: #f6f8fb; --texte: #18202b; --discret: #5a6676; --trait: #d8dee7;
+  --accent: #1f5fbf; --accent-fond: #e5eefb;
+  --p1: #c4262e; --p2: #cf5a10; --p3: #9a7400; --p4: #6b7a8c; --neuf: #17804a;
+  --sans: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fond: #0d1117; --surface: #151b23; --surface-2: #1b232d; --texte: #e3e8ef; --discret: #93a0b1; --trait: #2a3441;
+    --accent: #6ea8ff; --accent-fond: #182a44;
+    --p1: #ff6467; --p2: #ff9a52; --p3: #e5bd45; --p4: #8d9cae; --neuf: #4fd18b;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --fond: #0d1117; --surface: #151b23; --surface-2: #1b232d; --texte: #e3e8ef; --discret: #93a0b1; --trait: #2a3441;
+  --accent: #6ea8ff; --accent-fond: #182a44;
+  --p1: #ff6467; --p2: #ff9a52; --p3: #e5bd45; --p4: #8d9cae; --neuf: #4fd18b;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fond); color: var(--texte); font: 15px/1.5 var(--sans); }
+.page { max-width: 1240px; margin: 0 auto; padding-block: 20px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-bottom: 16px; }
+h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+.fraicheur { color: var(--discret); font-size: 13px; }
+.fraicheur.vieux { color: var(--p2); font-weight: 600; }
+.bandeau { background: var(--surface); border: 1px solid var(--trait); border-left: 4px solid var(--p2);
+  border-radius: 6px; padding: 10px 14px; margin-bottom: 12px; font-size: 14px; }
+.bandeau.info { border-left-color: var(--accent); }
+
+.tuiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+.tuile { all: unset; cursor: pointer; background: var(--surface); border: 1px solid var(--trait); border-radius: 8px;
+  padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+.tuile:hover { border-color: var(--accent); }
+.tuile:focus-visible { outline: 2px solid var(--accent); }
+.tuile b { font: 600 26px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.tuile span { color: var(--discret); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+.tuile.p1 b { color: var(--p1); } .tuile.p2 b { color: var(--p2); }
+.tuile.neuf b { color: var(--neuf); }
+
+.barre { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; display: flex; flex-wrap: wrap; gap: 8px 14px;
+  align-items: center; background: var(--surface); border: 1px solid var(--trait); border-radius: 8px;
+  padding: 10px 12px; margin-bottom: 12px; }
+.barre input[type=search] { flex: 1 1 220px; min-width: 0; padding: 7px 10px; border: 1px solid var(--trait); border-radius: 6px;
+  background: var(--surface-2); color: var(--texte); font: inherit; }
+.barre select { padding: 6px 8px; border: 1px solid var(--trait); border-radius: 6px; background: var(--surface-2);
+  color: var(--texte); font: inherit; }
+.barre label { display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; font-size: 14px; }
+.compte { color: var(--discret); font-size: 13px; margin-left: auto; font-variant-numeric: tabular-nums; }
+
+details.parc { background: var(--surface); border: 1px solid var(--trait); border-radius: 8px; margin-bottom: 12px; }
+details.parc summary { cursor: pointer; padding: 10px 14px; font-weight: 600; }
+details.parc summary small { font-weight: 400; color: var(--discret); margin-left: 6px; }
+.parc-corps { padding: 0 14px 14px; display: grid; gap: 10px; }
+.parc-corps p { margin: 0; color: var(--discret); font-size: 14px; max-width: 70ch; }
+.parc-corps textarea { width: 100%; min-height: 180px; padding: 8px 10px; border: 1px solid var(--trait); border-radius: 6px;
+  background: var(--surface-2); color: var(--texte); font: 14px/1.5 var(--mono); resize: vertical; }
+.boutons { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button.btn { font: 600 14px var(--sans); padding: 7px 14px; border-radius: 6px; border: 1px solid var(--accent);
+  background: var(--accent); color: var(--surface); cursor: pointer; }
+button.btn.second { background: transparent; color: var(--accent); }
+.confirm { color: var(--neuf); font-size: 14px; }
+
+.liste { display: flex; flex-direction: column; gap: 8px; }
+.item { background: var(--surface); border: 1px solid var(--trait); border-left: 5px solid var(--p4); border-radius: 6px;
+  padding: 10px 14px; min-width: 0; }
+.item.p1 { border-left-color: var(--p1); } .item.p2 { border-left-color: var(--p2); } .item.p3 { border-left-color: var(--p3); }
+.entete { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.id { font: 500 14px var(--mono); text-decoration: none; }
+.id:hover { text-decoration: underline; }
+.titre { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; padding: 1px 7px; border-radius: 4px;
+  border: 1px solid currentColor; white-space: nowrap; }
+.c-p1 { color: var(--p1); } .c-p2 { color: var(--p2); } .c-p3 { color: var(--p3); } .c-p4 { color: var(--p4); }
+.c-kev { color: var(--p1); background: color-mix(in srgb, var(--p1) 12%, transparent); }
+.c-neuf { color: var(--neuf); }
+.c-mot { color: var(--accent); background: var(--accent-fond); border-color: transparent; letter-spacing: 0; }
+.mesures { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--discret); font-size: 13px; margin-top: 4px;
+  font-variant-numeric: tabular-nums; }
+.mesures b { font: 500 13px var(--mono); color: var(--texte); }
+.desc { color: var(--discret); margin: 4px 0 0; font-size: 14px; overflow-wrap: anywhere; max-width: 110ch; }
+.vide, .chargement { text-align: center; color: var(--discret); padding: 40px 0; }
+.plus { align-self: center; margin-top: 8px; }
+
+details.aide { margin-top: 24px; background: var(--surface); border: 1px solid var(--trait); border-radius: 8px; padding: 10px 14px; }
+details.aide summary { cursor: pointer; font-weight: 600; }
+details.aide p, details.aide li { max-width: 80ch; font-size: 14px; }
+.aide table { border-collapse: collapse; font-size: 14px; }
+.aide td, .aide th { text-align: left; padding: 4px 10px 4px 0; border-bottom: 1px solid var(--trait); vertical-align: top; }
+.tableau { overflow-x: auto; }
+
+@media (max-width: 760px) {
+  .tuiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .barre { position: static; }
+  .compte { margin-left: 0; }
+}
+@media (max-width: 420px) {
+  .tuiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tuile:last-child { grid-column: span 2; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Veille vulnérabilités</h1>
+    <span class="fraicheur" id="fraicheur">Chargement des données…</span>
+  </header>
+
+  <div id="bandeaux"></div>
+
+  <div class="tuiles" id="tuiles"></div>
+
+  <details class="parc" id="parc">
+    <summary>Mon parc <small id="parc-resume"></small></summary>
+    <div class="parc-corps">
+      <p>Un mot-clé par ligne : marques, gammes, logiciels, systèmes (ex. <code>FortiGate</code>, <code>Stormshield</code>, <code>Windows Server</code>).
+         Cette liste est enregistrée <b>uniquement dans ce navigateur</b>. Elle n'est jamais envoyée ni publiée, car le site est public.</p>
+      <textarea id="mots" spellcheck="false" aria-label="Mots-clés de votre parc"></textarea>
+      <div class="boutons">
+        <button class="btn" id="enregistrer" type="button">Enregistrer</button>
+        <button class="btn second" id="defaut" type="button">Revenir à la liste d'exemple</button>
+        <span class="confirm" id="confirm" hidden>Enregistré, priorités recalculées.</span>
+      </div>
+    </div>
+  </details>
+
+  <div class="barre">
+    <input type="search" id="recherche" placeholder="Rechercher une CVE, un produit, un éditeur…" aria-label="Rechercher">
+    <select id="source" aria-label="Source">
+      <option value="">Toutes les sources</option>
+      <option value="CERT-FR">CERT-FR</option>
+      <option value="KEV">Exploitées (CISA KEV)</option>
+      <option value="NVD">NVD</option>
+    </select>
+    <select id="prio" aria-label="Priorité">
+      <option value="4">P1 à P4</option>
+      <option value="3">P1 à P3</option>
+      <option value="2">P1 et P2</option>
+      <option value="1">P1 seulement</option>
+    </select>
+    <label><input type="checkbox" id="seulParc"> Mon parc</label>
+    <label><input type="checkbox" id="seulNeufs"> Nouveaux</label>
+    <span class="compte" id="compte"></span>
+  </div>
+
+  <div class="liste" id="liste"><div class="chargement">Chargement des données…</div></div>
+
+  <details class="aide">
+    <summary>Comment lire ce tableau</summary>
+    <div class="tableau">
+      <table>
+        <tr><th>P1</th><td>Alerte CERT-FR, ou élément de votre parc exploité activement (KEV), CVSS ≥ 9 ou EPSS ≥ 50 %</td><td>Traiter immédiatement, prévenir l'équipe</td></tr>
+        <tr><th>P2</th><td>Exploité activement hors de votre parc, ou votre parc avec CVSS ≥ 7, EPSS ≥ 10 % ou avis CERT-FR</td><td>Planifier le correctif</td></tr>
+        <tr><th>P3</th><td>Concerne votre parc, gravité modérée ou pas encore notée</td><td>Suivre</td></tr>
+        <tr><th>P4</th><td>Hors de votre parc</td><td>Pour information</td></tr>
+      </table>
+    </div>
+    <ul>
+      <li><b>CVSS</b> : gravité théorique de 0 à 10. Les CVE très récentes n'ont souvent pas encore de score.</li>
+      <li><b>EPSS</b> : probabilité qu'une faille soit exploitée dans les 30 jours (FIRST).</li>
+      <li><b>Exploitée</b> : présente au catalogue KEV de la CISA. L'échéance est celle imposée aux agences américaines, un bon repère d'urgence.</li>
+      <li><b>Nouveau</b> : apparu depuis votre visite précédente sur ce navigateur.</li>
+      <li>La correspondance avec votre parc se fait par mots-clés : vérifiez toujours les versions concernées dans l'avis de l'éditeur.</li>
+    </ul>
+    <p>Sources : <a href="https://www.cert.cyber.gouv.fr/" target="_blank" rel="noopener">CERT-FR</a> ·
+      <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener">CISA KEV</a> ·
+      <a href="https://nvd.nist.gov/" target="_blank" rel="noopener">NVD</a> ·
+      <a href="https://www.first.org/epss/" target="_blank" rel="noopener">FIRST EPSS</a></p>
+  </details>
+</div>
+
+<script>
+// Liste d'exemple : à remplacer par votre propre parc depuis le panneau « Mon parc »
+const MOTS_EXEMPLE = [
+  'Cisco', 'IOS XE', 'ASA', 'Meraki', 'Fortinet', 'FortiGate', 'FortiOS', 'FortiClient', 'FortiManager', 'FortiWeb',
+  'Stormshield', 'Palo Alto', 'PAN-OS', 'GlobalProtect', 'Juniper', 'Junos', 'Aruba', 'HPE', 'Check Point', 'SonicWall',
+  'WatchGuard', 'F5', 'BIG-IP', 'Ivanti', 'Citrix', 'NetScaler', 'VMware', 'ESXi', 'vCenter', 'Proxmox', 'Hyper-V',
+  'Windows Server', 'Microsoft Windows', 'Active Directory', 'Exchange Server', 'SharePoint', 'Outlook', 'Microsoft 365',
+  'Veeam', 'Synology', 'QNAP', 'OpenSSH', 'OpenSSL', 'Apache', 'nginx', 'Tomcat', 'Linux kernel', 'Debian', 'Ubuntu',
+  'Red Hat', 'Zimbra', 'Roundcube', 'GLPI'
+];
+const PAR_PAGE = 150;
+const $ = id => document.getElementById(id);
+
+function lire(cle) { try { return localStorage.getItem(cle); } catch (e) { return null; } }
+function ecrire(cle, val) { try { localStorage.setItem(cle, val); } catch (e) {} }
+
+// Visite précédente : un rechargement dans la demi-heure ne compte pas comme une nouvelle visite
+const maintenant = Date.now();
+let visitePrecedente = +lire('veille-visite-precedente') || maintenant - 24 * 3600e3;
+const visiteCourante = +lire('veille-visite-courante') || 0;
+if (maintenant - visiteCourante > 30 * 60e3) {
+  if (visiteCourante) visitePrecedente = visiteCourante;
+  ecrire('veille-visite-precedente', String(visitePrecedente));
+  ecrire('veille-visite-courante', String(maintenant));
+}
+
+let mots = (() => {
+  try { const m = JSON.parse(lire('veille-parc')); if (Array.isArray(m)) return m; } catch (e) {}
+  return null;
+})();
+const parcPersonnalise = !!mots;
+if (!mots) mots = MOTS_EXEMPLE.slice();
+
+let donnees = null;
+let elements = [];
+let limite = PAR_PAGE;
+
+const ctrl = { recherche: $('recherche'), source: $('source'), prio: $('prio'), seulParc: $('seulParc'), seulNeufs: $('seulNeufs') };
+try {
+  const f = JSON.parse(lire('veille-filtres') || '{}');
+  ctrl.prio.value = f.prio || '3';
+  ctrl.seulParc.checked = !!f.seulParc;
+} catch (e) { ctrl.prio.value = '3'; }
+
+function construireRegex(liste) {
+  const alt = liste.map(m => m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  return alt ? new RegExp(`(?<![\\w])(${alt})(?![\\w])`, 'gi') : null;
+}
+
+// Pour les CVE NVD, le produit visé est nommé en début de description ; la suite cite souvent
+// d'autres logiciels en passant (« ...on Apache servers ») et créerait des faux positifs
+function correspondances(d, regex, index) {
+  if (!regex) return [];
+  const texte = d.sources.includes('NVD') ? `${d.produits} ${d.desc.slice(0, 250)}` : `${d.titre} ${d.produits} ${d.desc}`;
+  const trouves = new Set();
+  for (const m of texte.matchAll(regex)) trouves.add(index.get(m[1].toLowerCase()) || m[1]);
+  return [...trouves];
+}
+
+function priorite(d) {
+  const parc = d.mots.length > 0, cvss = d.cvss || 0, epss = d.epss || 0;
+  if (d.sources.includes('CERT-FR alerte')) return 1;
+  if (parc && (d.kev || cvss >= 9 || epss >= 0.5)) return 1;
+  if (d.kev) return 2;
+  if (parc && (cvss >= 7 || epss >= 0.1 || d.sources.includes('CERT-FR avis'))) return 2;
+  if (parc) return 3;
+  return 4;
+}
+
+function calculer() {
+  const regex = construireRegex(mots);
+  const index = new Map(mots.map(m => [m.toLowerCase(), m]));
+  elements = donnees.elements.map(d => {
+    const e = { ...d, mots: [] };
+    e.mots = correspondances(e, regex, index);
+    e.prio = priorite(e);
+    e.neuf = Date.parse(e.vu) > visitePrecedente;
+    e.recherche = [e.id, e.titre, e.produits, e.desc].join(' ').toLowerCase();
+    return e;
+  });
+  elements.sort((a, b) => a.prio - b.prio || (b.date > a.date ? 1 : b.date < a.date ? -1 : 0) || (a.id < b.id ? -1 : 1));
+  $('parc-resume').textContent = parcPersonnalise
+    ? `${mots.length} mots-clés · ${elements.filter(e => e.mots.length).length} éléments concernés`
+    : `liste d'exemple · personnalisez-la`;
+  tuiles();
+}
+
+function tuiles() {
+  const defs = [
+    { cls: 'p1', lib: 'P1 urgent', n: elements.filter(e => e.prio === 1).length, f: { prio: '1' } },
+    { cls: 'p2', lib: 'P2 rapide', n: elements.filter(e => e.prio === 2).length, f: { prio: '2' } },
+    { cls: '', lib: 'Exploitées', n: elements.filter(e => e.kev).length, f: { source: 'KEV' } },
+    { cls: '', lib: 'Mon parc', n: elements.filter(e => e.mots.length).length, f: { seulParc: true } },
+    { cls: 'neuf', lib: 'Nouveaux', n: elements.filter(e => e.neuf).length, f: { seulNeufs: true } },
+  ];
+  const cont = $('tuiles');
+  cont.replaceChildren();
+  for (const t of defs) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tuile ' + t.cls;
+    b.innerHTML = '<b></b><span></span>';
+    b.querySelector('b').textContent = t.n.toLocaleString('fr-FR');
+    b.querySelector('span').textContent = t.lib;
+    b.onclick = () => {
+      ctrl.recherche.value = ''; ctrl.source.value = t.f.source || ''; ctrl.prio.value = t.f.prio || '4';
+      ctrl.seulParc.checked = !!t.f.seulParc; ctrl.seulNeufs.checked = !!t.f.seulNeufs;
+      afficher(true);
+    };
+    cont.appendChild(b);
+  }
+}
+
+function chip(texte, cls) {
+  const s = document.createElement('span');
+  s.className = 'chip ' + cls;
+  s.textContent = texte;
+  return s;
+}
+
+function dateFr(iso) {
+  const [a, m, j] = iso.split('-');
+  return `${j}/${m}/${a}`;
+}
+
+function carte(d) {
+  const item = document.createElement('article');
+  item.className = 'item p' + d.prio;
+
+  const entete = document.createElement('div');
+  entete.className = 'entete';
+  const chips = document.createElement('span');
+  chips.className = 'chips';
+  chips.appendChild(chip('P' + d.prio, 'c-p' + d.prio));
+  if (d.neuf) chips.appendChild(chip('NOUVEAU', 'c-neuf'));
+  if (d.kev) chips.appendChild(chip('EXPLOITÉE', 'c-kev'));
+  if (d.rancon) chips.appendChild(chip('RANÇONGICIEL', 'c-kev'));
+  entete.appendChild(chips);
+  const a = document.createElement('a');
+  a.className = 'id';
+  a.href = d.lien; a.target = '_blank'; a.rel = 'noopener';
+  a.textContent = d.id;
+  entete.appendChild(a);
+  const t = document.createElement('span');
+  t.className = 'titre';
+  t.textContent = d.titre;
+  entete.appendChild(t);
+  for (const m of d.mots) entete.appendChild(chip(m, 'c-mot'));
+  item.appendChild(entete);
+
+  const mesures = document.createElement('div');
+  mesures.className = 'mesures';
+  const ajout = (lib, val) => {
+    const s = document.createElement('span');
+    s.append(lib + ' ');
+    const b = document.createElement('b');
+    b.textContent = val;
+    s.appendChild(b);
+    mesures.appendChild(s);
+  };
+  ajout('', d.sources.join(' + '));
+  ajout('Publié', dateFr(d.date));
+  ajout('CVSS', d.cvss != null ? d.cvss.toFixed(1) : 'n/d');
+  if (d.epss != null) ajout('EPSS', (d.epss * 100).toLocaleString('fr-FR', { maximumFractionDigits: 1 }) + ' %');
+  if (d.echeance) ajout('Échéance CISA', dateFr(d.echeance));
+  item.appendChild(mesures);
+
+  if (d.desc && d.desc !== d.titre) {
+    const p = document.createElement('p');
+    p.className = 'desc';
+    p.textContent = d.desc;
+    item.appendChild(p);
+  }
+  return item;
+}
+
+function afficher(reinit) {
+  if (!donnees) return;
+  if (reinit) limite = PAR_PAGE;
+  ecrire('veille-filtres', JSON.stringify({ prio: ctrl.prio.value, seulParc: ctrl.seulParc.checked }));
+
+  const q = ctrl.recherche.value.trim().toLowerCase();
+  const src = ctrl.source.value;
+  const prioMax = +ctrl.prio.value;
+  const res = elements.filter(d =>
+    d.prio <= prioMax &&
+    (!src || (src === 'KEV' ? d.kev : d.sources.some(s => s.startsWith(src)))) &&
+    (!ctrl.seulParc.checked || d.mots.length) &&
+    (!ctrl.seulNeufs.checked || d.neuf) &&
+    (!q || d.recherche.includes(q))
+  );
+
+  $('compte').textContent = `${res.length.toLocaleString('fr-FR')} sur ${elements.length.toLocaleString('fr-FR')}`;
+  const liste = $('liste');
+  liste.replaceChildren();
+  if (!res.length) {
+    const v = document.createElement('div');
+    v.className = 'vide';
+    v.textContent = 'Aucun élément avec ces filtres. Élargissez la priorité ou videz la recherche.';
+    liste.appendChild(v);
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  res.slice(0, limite).forEach(d => frag.appendChild(carte(d)));
+  liste.appendChild(frag);
+  if (res.length > limite) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn second plus';
+    b.textContent = `Afficher ${Math.min(PAR_PAGE, res.length - limite)} de plus`;
+    b.onclick = () => { limite += PAR_PAGE; afficher(false); };
+    liste.appendChild(b);
+  }
+}
+
+function bandeau(texte, cls) {
+  const d = document.createElement('div');
+  d.className = 'bandeau ' + (cls || '');
+  d.textContent = texte;
+  $('bandeaux').appendChild(d);
+}
+
+// --- Mon parc ---
+$('mots').value = mots.join('\n');
+if (!parcPersonnalise) $('parc').open = true;
+$('enregistrer').onclick = () => {
+  mots = [...new Set($('mots').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean))];
+  ecrire('veille-parc', JSON.stringify(mots));
+  $('mots').value = mots.join('\n');
+  $('confirm').hidden = false;
+  setTimeout(() => { $('confirm').hidden = true; }, 3000);
+  if (donnees) { calculer(); afficher(true); }
+};
+$('defaut').onclick = () => { $('mots').value = MOTS_EXEMPLE.join('\n'); };
+
+Object.values(ctrl).forEach(c => c.addEventListener('input', () => afficher(true)));
+
+fetch('donnees.json', { cache: 'no-cache' })
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(d => {
+    donnees = d;
+    const genere = new Date(d.genere);
+    const heures = (Date.now() - genere) / 3600e3;
+    const f = $('fraicheur');
+    f.textContent = `Données du ${genere.toLocaleDateString('fr-FR')} à ${genere.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`
+      + ` · CVE des ${d.fenetres.nvd} derniers jours, KEV et CERT-FR des ${d.fenetres.kev} derniers jours`;
+    if (heures > 12) {
+      f.classList.add('vieux');
+      bandeau(`Les données datent de plus de ${Math.floor(heures)} h : la collecte automatique est peut-être en panne (onglet Actions du dépôt GitHub).`);
+    }
+    for (const e of d.erreurs || []) bandeau('Source indisponible lors de la dernière collecte : ' + e);
+    if (!parcPersonnalise) bandeau('Renseignez votre parc ci-dessous pour que les priorités reflètent vos équipements. La liste actuelle est un exemple.', 'info');
+    calculer();
+    afficher(true);
+  })
+  .catch(err => {
+    $('fraicheur').textContent = 'Données indisponibles';
+    $('liste').replaceChildren();
+    bandeau(`Impossible de charger donnees.json (${err.message}). La première collecte n'a peut-être pas encore tourné.`);
+  });
+</script>
+</body>
+</html>
