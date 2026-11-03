@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Veille vulnérabilités</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assistant.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,600..800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
@@ -342,13 +343,14 @@ dialog::backdrop { background: rgb(10 14 21 / 55%); backdrop-filter: blur(3px); 
     <p class="confidentiel">Cette liste reste dans ce navigateur. Elle n'est jamais envoyée ni publiée, car le site est public.</p>
     <textarea id="mots" spellcheck="false" aria-label="Mots-clés de votre parc"></textarea>
     <div class="actions">
-      <button class="btn discret gauche" id="defaut" type="button">Liste d'exemple</button>
+      <button class="btn discret gauche" id="questionnaire" type="button">Refaire le questionnaire</button>
       <button class="btn discret" value="annuler" type="submit">Annuler</button>
       <button class="btn" id="enregistrer" value="ok" type="submit">Enregistrer</button>
     </div>
   </form>
 </dialog>
 
+<script src="assistant.js"></script>
 <script>
 // Liste d'exemple : à remplacer par votre propre parc depuis « Modifier mon parc »
 const MOTS_EXEMPLE = [
@@ -703,15 +705,44 @@ function ouvrirParc() {
   if (dialogue.showModal) dialogue.showModal(); else dialogue.setAttribute('open', '');
 }
 $('ouvrir-parc').onclick = ouvrirParc;
-$('defaut').onclick = () => { $('mots').value = MOTS_EXEMPLE.join('\n'); };
-dialogue.addEventListener('close', () => {
-  if (dialogue.returnValue !== 'ok') return;
-  mots = [...new Set($('mots').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean))];
+$('questionnaire').onclick = () => { dialogue.close(); lancerAssistant(); };
+function enregistrerParc(liste) {
+  mots = [...new Set(liste)];
   ecrire('veille-parc', JSON.stringify(mots));
   parcPersonnalise = true;
   document.querySelector('.bandeau.info')?.remove();
   if (donnees) { calculer(); panneau(); titreDuJour(); afficher(true); }
+}
+dialogue.addEventListener('close', () => {
+  if (dialogue.returnValue !== 'ok') return;
+  enregistrerParc($('mots').value.split(/\r?\n/).map(s => s.trim()).filter(Boolean));
 });
+
+// Questionnaire guidé, proposé à chaque visite tant que le parc n'est pas renseigné
+function lancerAssistant() {
+  if (!window.Assistant) { ouvrirParc(); return; }
+  Assistant.ouvrir({
+    mots: parcPersonnalise ? mots : [],
+    enregistrer: enregistrerParc,
+    plusTard: () => { try { sessionStorage.setItem('veille-assistant', 'plus-tard'); } catch (e) {} },
+    compter: liste => {
+      if (!donnees) return null;
+      const regex = construireRegex(liste);
+      const index = new Map(liste.map(m => [m.toLowerCase(), m]));
+      let total = 0, urgentes = 0;
+      for (const d of donnees.elements) {
+        const e = { ...d, mots: correspondances(d, regex, index) };
+        if (!e.mots.length) continue;
+        total++;
+        if (priorite(e) === 1) urgentes++;
+      }
+      return { total, urgentes };
+    },
+  });
+}
+let assistantReporte = false;
+try { assistantReporte = sessionStorage.getItem('veille-assistant') === 'plus-tard'; } catch (e) {}
+if (!parcPersonnalise && !assistantReporte) lancerAssistant();
 
 $('recherche').addEventListener('input', () => afficher(true));
 
@@ -728,7 +759,7 @@ fetch('donnees.json', { cache: 'no-cache' })
     f.classList.add(heures < 6 ? 'ok' : heures < 12 ? 'tiede' : 'vieux');
     if (heures > 12) bandeau(`Les données datent de plus de ${Math.floor(heures)} h : la collecte automatique est peut-être en panne (onglet Actions du dépôt GitHub).`);
     for (const e of d.erreurs || []) bandeau('Source indisponible lors de la dernière collecte : ' + e);
-    if (!parcPersonnalise) bandeau('Les priorités sont calculées avec une liste d\'exemple. Renseignez vos équipements pour qu\'elles reflètent votre parc.', 'info', { lib: 'Renseigner mon parc', fn: ouvrirParc });
+    if (!parcPersonnalise) bandeau('Les priorités sont calculées avec une liste d\'exemple. Renseignez vos équipements pour qu\'elles reflètent votre parc.', 'info', { lib: 'Renseigner mon parc', fn: lancerAssistant });
     calculer();
     panneau();
     titreDuJour();
