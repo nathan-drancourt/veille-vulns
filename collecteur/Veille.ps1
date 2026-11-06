@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Collecteur de la veille vulnérabilités : CERT-FR + CISA KEV + NVD + EPSS.
+    Collecteur de la veille cyber : vulnérabilités (CERT-FR, CISA KEV, NVD, EPSS) et actualités (flux RSS).
 
 .DESCRIPTION
     Exécuté par GitHub Actions (PowerShell 7, Linux) ou en local (PowerShell 5.1+).
@@ -32,7 +32,10 @@ $JoursNvd = [Math]::Min([Math]::Max([int]$Config.JoursNvd, 1), 120)
 $DepuisNvd = $Maintenant.AddDays(-$JoursNvd)
 $DepuisKev = $Maintenant.AddDays(-[int]$Config.JoursKev)
 $DepuisCertFr = $Maintenant.AddDays(-[int]$Config.JoursCertFr)
+$DepuisActualites = $Maintenant.AddDays(-[int]$Config.JoursActualites)
 $CleNvd = $env:NVD_API_KEY
+# Certains sites refusent les clients sans navigateur déclaré
+$AgentHttp = 'Mozilla/5.0 (compatible; veille-cyber; +https://github.com/nathan-drancourt/veille-vulns)'
 
 function Write-Etape([string]$Message) {
     Write-Host "[$(Get-Date -Format HH:mm:ss)] $Message"
@@ -178,6 +181,87 @@ function Get-CertFr {
     }
 }
 
+# --- Actualités ------------------------------------------------------------------------------
+
+# Thèmes repérés dans le titre et le résumé, pour filtrer et signaler ce qui presse
+$Themes = [ordered]@{
+    'exploitee'  = 'actively exploited|exploited in the wild|under active exploitation|exploitée? activement|activement exploitée?'
+    'zero-day'   = 'zero[- ]?day|0[- ]?day|jour z[ée]ro'
+    'rancon'     = 'ransomware|rançongiciel|ransom'
+    'fuite'      = 'data breach|data leak|fuite de donn[ée]es|leaked'
+    'hameconnage' = 'phishing|hameçonnage|smishing'
+}
+
+function ConvertTo-Date([string]$Texte) {
+    if (-not $Texte) { return $null }
+    $culture = [Globalization.CultureInfo]::InvariantCulture
+    $style = [Globalization.DateTimeStyles]::AssumeUniversal
+    $d = [DateTimeOffset]::MinValue
+    if ([DateTimeOffset]::TryParse($Texte.Trim(), $culture, $style, [ref]$d)) { return $d.UtcDateTime }
+    # RFC 822 avec fuseau en lettres (EST, PDT...) ou année sur deux chiffres
+    $t = $Texte.Trim() -replace '\s+[A-Z]{2,4}$', ' +0000' -replace '^(\w{3}, \d{1,2} \w{3} )(\d{2}) ', '${1}20$2 '
+    if ([DateTimeOffset]::TryParse($t, $culture, $style, [ref]$d)) { return $d.UtcDateTime }
+    $null
+}
+
+function Get-Champ($Noeud, [string[]]$Noms) {
+    foreach ($nom in $Noms) {
+        $x = $Noeud.SelectSingleNode("*[local-name()='$nom']")
+        if ($x) { return $x }
+    }
+    $null
+}
+
+# Lit un flux RSS 2.0 ou Atom ; l'encodage déclaré dans le XML est respecté
+function Get-Flux($Flux) {
+    $r = Invoke-WebRequest -Uri $Flux.url -UseBasicParsing -TimeoutSec 60 -UserAgent $AgentHttp
+    $xml = New-Object Xml.XmlDocument
+    $xml.XmlResolver = $null
+    $xml.Load((New-Object IO.MemoryStream (, $r.RawContentStream.ToArray())))
+    # Fuseau de la source quand ses dates n'en indiquent pas (identifiant Linux, puis Windows)
+    $fuseau = $null
+    if ($Flux.fuseau) {
+        foreach ($nom in @($Flux.fuseau, 'Romance Standard Time')) {
+            try { $fuseau = [TimeZoneInfo]::FindSystemTimeZoneById($nom); break } catch { }
+        }
+    }
+    foreach ($it in $xml.SelectNodes('//*[local-name()="item" or local-name()="entry"]')) {
+        $texteDate = (Get-Champ $it 'pubDate', 'published', 'updated', 'date').InnerText
+        $date = ConvertTo-Date $texteDate
+        if ($date -and $fuseau -and $texteDate -notmatch '(Z|[+-]\d{2}:?\d{2}|[A-Z]{2,4})\s*$') {
+            $date = [TimeZoneInfo]::ConvertTimeToUtc([datetime]::SpecifyKind($date, 'Unspecified'), $fuseau)
+        }
+        if (-not $date -or $date -lt $DepuisActualites -or $date -gt $Maintenant.AddHours(2)) { continue }
+
+        $noeudLien = Get-Champ $it 'link'
+        $lien = if ($noeudLien.GetAttribute('href')) { $noeudLien.GetAttribute('href') } else { $noeudLien.InnerText.Trim() }
+        if (-not $lien) { continue }
+        $titre = [Net.WebUtility]::HtmlDecode((Get-Champ $it 'title').InnerText)
+        $brut = (Get-Champ $it 'description', 'summary', 'content', 'encoded').InnerText
+        $resume = [Net.WebUtility]::HtmlDecode(($brut -replace '<[^>]+>', ' '))
+        # Mentions ajoutées par les blogs en fin de résumé (« [...] », « The post X appeared first on Y »)
+        $resume = $resume -replace '(?s)\s*(The post|L.article|Le post) .+? (appeared first on|est apparu en premier sur|a été publié sur) .+$', ''
+        if ($resume -match '\s*(\[\s*(…|\.{3})\s*\]|\(\s*(…|\.{3})\s*\))\s*$') {
+            $resume = $resume.Substring(0, $resume.Length - $Matches[0].Length).TrimEnd()
+            if ($resume -notmatch '[.!?…]$') { $resume += '…' }
+        }
+        $texte = "$titre $resume"
+
+        [ordered]@{
+            id     = $lien
+            source = $Flux.nom
+            langue = $Flux.langue
+            titre  = Limit-Texte $titre 220
+            resume = Limit-Texte $resume 360
+            lien   = $lien
+            date   = $date.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
+            cves   = @([regex]::Matches($texte, 'CVE-\d{4}-\d{4,}', 'IgnoreCase') | ForEach-Object { $_.Value.ToUpper() } | Select-Object -Unique)
+            themes = @($Themes.Keys | Where-Object { $texte -match $Themes[$_] })
+            vu     = ''
+        }
+    }
+}
+
 function Add-Epss($Elements) {
     $cves = @($Elements | Where-Object { $_.id -match '^CVE-' } | ForEach-Object { $_.id })
     $scores = @{}
@@ -231,6 +315,22 @@ try { Add-Epss $liste } catch { $erreurs += "EPSS : $($_.Exception.Message)" }
 
 if ($liste.Count -eq 0) { throw "Aucune donnée collectée : $($erreurs -join ' | ')" }
 
+# Une source d'actualités en panne n'est pas grave : elle est simplement signalée sur le site
+$actualites = [ordered]@{}
+$sourcesActualites = @()
+foreach ($f in @($Config.Actualites)) {
+    Write-Etape "Actualités : $($f.nom)"
+    try {
+        $n = 0
+        foreach ($a in Get-Flux $f) { if (-not $actualites.Contains($a.id)) { $actualites[$a.id] = $a; $n++ } }
+        $sourcesActualites += [ordered]@{ nom = $f.nom; langue = $f.langue; site = ([uri]$f.url).Host; articles = $n; erreur = '' }
+    } catch {
+        Write-Warning "$($f.nom) indisponible : $($_.Exception.Message)"
+        $sourcesActualites += [ordered]@{ nom = $f.nom; langue = $f.langue; site = ([uri]$f.url).Host; articles = 0; erreur = $_.Exception.Message }
+    }
+}
+$listeActualites = @($actualites.Values | Sort-Object @{ Expression = { $_.date }; Descending = $true } | Select-Object -First 500)
+
 # --- Premières vues --------------------------------------------------------------------------
 
 $etat = @{}
@@ -246,7 +346,7 @@ if (Test-Path $FichierEtat) {
     }
 }
 $horodatage = $Maintenant.ToString('yyyy-MM-ddTHH:mm:ssZ', [Globalization.CultureInfo]::InvariantCulture)
-foreach ($e in $liste) {
+foreach ($e in @($liste) + @($listeActualites)) {
     if (-not $etat.ContainsKey($e.id)) { $etat[$e.id] = $horodatage }
     $e.vu = $etat[$e.id]
 }
@@ -263,11 +363,13 @@ foreach ($cle in ($etat.Keys | Sort-Object)) {
 $liste = @($liste | Sort-Object @{ Expression = { $_.date }; Descending = $true }, @{ Expression = { $_.id } })
 $sortie = [ordered]@{
     genere      = $horodatage
-    fenetres    = [ordered]@{ nvd = $JoursNvd; kev = [int]$Config.JoursKev; certfr = [int]$Config.JoursCertFr }
+    fenetres    = [ordered]@{ nvd = $JoursNvd; kev = [int]$Config.JoursKev; certfr = [int]$Config.JoursCertFr; actualites = [int]$Config.JoursActualites }
     erreurs     = $erreurs
     elements    = $liste
+    sources     = $sourcesActualites
+    actualites  = $listeActualites
 }
 [IO.File]::WriteAllText($FichierSortie, (ConvertTo-Json $sortie -Depth 4 -Compress), (New-Object Text.UTF8Encoding $false))
 
-Write-Etape "$($liste.Count) éléments écrits dans docs/donnees.json"
+Write-Etape "$($liste.Count) vulnérabilités et $($listeActualites.Count) actualités écrites dans docs/donnees.json"
 foreach ($err in $erreurs) { Write-Warning $err }
