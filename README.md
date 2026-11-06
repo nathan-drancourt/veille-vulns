@@ -1,4 +1,4 @@
-# Veille vulnérabilités
+# Veille cyber
 
 Site de veille autonome hébergé sur GitHub Pages. Toutes les 4 heures, une GitHub Action collecte :
 
@@ -8,8 +8,18 @@ Site de veille autonome hébergé sur GitHub Pages. Toutes les 4 heures, une Git
 | **CISA KEV** | Vulnérabilités **exploitées dans la nature**, avec l'usage par des rançongiciels |
 | **NVD** | Toutes les CVE publiées, avec leur score CVSS et les produits concernés |
 | **EPSS** (FIRST) | Probabilité d'exploitation dans les 30 jours |
+| **Actualités** (14 flux RSS) | CERT-FR, Cybermalveillance.gouv.fr, ZATAZ, Le Monde Informatique, IT-Connect, UnderNews, BleepingComputer, The Hacker News, SecurityWeek, Dark Reading, Krebs on Security, SANS ISC, CISA |
 
-Le site classe chaque élément de P1 (urgent) à P4 (pour information) selon **votre parc**.
+Le site a deux rubriques :
+
+- **Actualités** : les articles des 7 derniers jours, classés par jour et par heure. Chaque article signale
+  les thèmes urgents (exploitation active, zero-day, rançongiciel), les équipements de votre parc cités
+  et les CVE mentionnées, avec un lien direct vers la fiche de la vulnérabilité. L'encadré
+  « À traiter maintenant » rappelle les vulnérabilités urgentes.
+- **Vulnérabilités** : chaque CVE classée de P1 (urgent) à P4 (pour information) selon **votre parc**.
+
+Pour ajouter ou retirer une source d'actualités, modifiez la liste `Actualites` de `config.json`
+(nom, adresse du flux RSS ou Atom, langue `fr` ou `en`).
 
 ## Pourquoi votre parc n'est pas dans le dépôt
 
@@ -58,6 +68,8 @@ Ensuite, tout est automatique : les données se mettent à jour toutes les 4 heu
 | `JoursNvd` | 7 | CVE publiées sur cette période (maximum 120) |
 | `JoursKev` | 30 | Ajouts récents au catalogue des failles exploitées |
 | `JoursCertFr` | 30 | Alertes et avis CERT-FR |
+| `JoursActualites` | 7 | Articles d'actualité |
+| `Actualites` | 14 sources | Flux RSS ou Atom : `nom`, `url`, `langue`, et `fuseau` si le flux donne des heures sans fuseau |
 
 Pour changer la fréquence de collecte, modifiez la ligne `cron` de `.github/workflows/veille.yml`. L'heure est en UTC.
 
