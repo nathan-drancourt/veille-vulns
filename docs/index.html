@@ -4,342 +4,385 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Veille vulnérabilités</title>
+<title>Veille cyber</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assistant.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,600..800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="assistant.css">
 <style>
-/* Mise en page : poste de veille — panneau de tri fixe à gauche, fil de lecture à droite, sections par priorité */
+/* Main courante : chaque entrée est horodatée dans une marge rouge, comme un registre de permanence.
+   Papier vert pâle de registre, encre bleue pour ce qui se clique, rouge réservé à l'urgence. */
 :root {
-  --fond: #f2f4f7; --surface: #ffffff; --surface-2: #eceff4; --encre: #111722; --discret: #586173; --pale: #8a93a3;
-  --trait: #dde2ea; --accent: #0b7285; --accent-doux: #e1f3f5;
-  --p1: #d62839; --p2: #e2590b; --p3: #a67c00; --p4: #7a8699; --neuf: #2b8a3e;
-  --ombre: 0 1px 2px rgb(17 23 34 / 6%), 0 4px 16px rgb(17 23 34 / 5%);
-  --titre: "Archivo", "Arial Narrow", "Segoe UI", sans-serif;
-  --texte: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --fond: #eef1ec; --surface: #fbfcfa; --surface-2: #e4e9e2; --encre: #18201c; --discret: #4f5c55; --pale: #85918a;
+  --trait: #d3dbd2; --accent: #1f4fa3; --accent-doux: #e2e9f6;
+  --p1: #b8232b; --p2: #c55a0c; --p3: #8a6d00; --p4: #6c7972; --neuf: #1d7a45;
+  --marge: color-mix(in srgb, var(--p1) 38%, transparent);
+  --titre: "Newsreader", Georgia, "Times New Roman", serif;
+  --texte: "Schibsted Grotesk", "Segoe UI", system-ui, sans-serif;
+  --mono: var(--texte);
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --fond: #0a0e15; --surface: #121822; --surface-2: #19212e; --encre: #e7ecf3; --discret: #97a2b4; --pale: #6c778a;
-    --trait: #242d3c; --accent: #3bc9db; --accent-doux: #0f2f37;
-    --p1: #ff5d6c; --p2: #ff922b; --p3: #f5c02c; --p4: #8693a6; --neuf: #57d06c;
-    --ombre: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 25%);
+    --fond: #0f1412; --surface: #161d1a; --surface-2: #1e2723; --encre: #e3eae5; --discret: #a0ada6; --pale: #6f7d76;
+    --trait: #29332e; --accent: #8fb0ff; --accent-doux: #1b2740;
+    --p1: #ff6b70; --p2: #ff9a4d; --p3: #e8c14a; --p4: #8d9a93; --neuf: #5fd08a;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --fond: #0a0e15; --surface: #121822; --surface-2: #19212e; --encre: #e7ecf3; --discret: #97a2b4; --pale: #6c778a;
-  --trait: #242d3c; --accent: #3bc9db; --accent-doux: #0f2f37;
-  --p1: #ff5d6c; --p2: #ff922b; --p3: #f5c02c; --p4: #8693a6; --neuf: #57d06c;
-  --ombre: 0 1px 2px rgb(0 0 0 / 30%), 0 6px 20px rgb(0 0 0 / 25%);
+  --fond: #0f1412; --surface: #161d1a; --surface-2: #1e2723; --encre: #e3eae5; --discret: #a0ada6; --pale: #6f7d76;
+  --trait: #29332e; --accent: #8fb0ff; --accent-doux: #1b2740;
+  --p1: #ff6b70; --p2: #ff9a4d; --p3: #e8c14a; --p4: #8d9a93; --neuf: #5fd08a;
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--fond); color: var(--encre); font: 16px/1.6 var(--texte); }
+body { margin: 0; background: var(--fond); color: var(--encre); font: 16px/1.55 var(--texte); font-variant-numeric: tabular-nums; }
 a { color: var(--accent); }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
-
-.app {
-  display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 40px;
-  max-width: 1320px; margin: 0 auto; padding-block: 0 64px;
+.page {
+  max-width: 1240px; margin: 0 auto;
   padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px));
 }
 
-/* --- Panneau de tri --- */
-.panneau {
-  position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto;
-  padding-block: 32px 24px; display: flex; flex-direction: column; gap: 26px; scrollbar-width: none;
-}
-.marque h1 {
-  margin: 0; font: 800 34px/0.95 var(--titre); font-stretch: 80%; letter-spacing: -0.01em; text-transform: uppercase;
-}
-.marque h1 span { color: var(--accent); }
-.fraicheur { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; font-size: 13px; color: var(--discret); }
-.point { width: 8px; height: 8px; border-radius: 50%; background: var(--pale); flex: none; }
-.fraicheur.ok .point { background: var(--neuf); box-shadow: 0 0 0 4px color-mix(in srgb, var(--neuf) 20%, transparent); }
+/* --- En-tête --- */
+.barre-haut { background: var(--surface); border-bottom: 1px solid var(--trait); }
+.barre-haut .page { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 32px; padding-block: 14px; }
+.identite { display: flex; align-items: center; gap: 12px; }
+.identite img { width: 30px; height: 30px; }
+.identite h1 { margin: 0; font: 600 24px/1 var(--titre); letter-spacing: -0.01em; }
+.fraicheur { display: flex; align-items: center; gap: 7px; margin: 3px 0 0; font-size: 13px; color: var(--discret); }
+.point { width: 7px; height: 7px; border-radius: 50%; background: var(--pale); flex: none; }
+.fraicheur.ok .point { background: var(--neuf); }
 .fraicheur.tiede .point { background: var(--p3); }
 .fraicheur.vieux .point { background: var(--p1); }
 .fraicheur.vieux { color: var(--p1); font-weight: 600; }
 
-.bloc h2 {
-  margin: 0 0 10px; font: 700 12px/1 var(--titre); font-stretch: 90%; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--pale);
+.onglets { display: flex; gap: 4px; margin-right: auto; }
+.onglet {
+  display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 8px;
+  color: var(--discret); text-decoration: none; font-weight: 600; font-size: 15px;
 }
-.prios { display: grid; gap: 6px; }
-.prio-btn {
-  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; width: 100%;
-  padding: 10px 12px; border: 1px solid var(--trait); border-radius: 10px; background: var(--surface);
-  cursor: pointer; text-align: left; transition: border-color .15s, background .15s, opacity .15s;
+.onglet:hover { color: var(--encre); background: var(--surface-2); }
+.onglet[aria-selected="true"] { color: var(--encre); background: var(--surface-2); box-shadow: inset 0 -2px 0 var(--encre); }
+.pastille {
+  min-width: 22px; padding: 1px 7px; border-radius: 11px; font-size: 12px; font-weight: 700; text-align: center;
+  background: var(--surface-2); color: var(--discret);
 }
-.prio-btn:hover { border-color: var(--pale); }
-.prio-btn[aria-pressed="false"] { opacity: 0.5; background: transparent; }
-.prio-btn .code {
-  font: 800 13px/1 var(--titre); color: var(--surface); background: var(--c); padding: 5px 7px; border-radius: 6px;
-}
-.prio-btn .lib { font-size: 14px; font-weight: 500; }
-.prio-btn .n { font: 600 15px var(--mono); font-variant-numeric: tabular-nums; color: var(--c); }
-.prio-btn[data-p="1"] { --c: var(--p1); } .prio-btn[data-p="2"] { --c: var(--p2); }
-.prio-btn[data-p="3"] { --c: var(--p3); } .prio-btn[data-p="4"] { --c: var(--p4); }
-.prio-btn[data-p="1"][aria-pressed="true"] { border-color: color-mix(in srgb, var(--p1) 45%, var(--trait)); }
+.onglet[aria-selected="true"] .pastille { background: var(--surface); }
+.pastille.urgente { background: var(--p1); color: #fff; }
+.pastille:empty { display: none; }
 
-.bascules { display: grid; gap: 6px; }
-.bascule {
-  display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border-radius: 10px;
-  border: 1px solid transparent; background: transparent; cursor: pointer; text-align: left; font-size: 14px;
-}
-.bascule:hover { background: var(--surface); }
-.bascule .interrupteur {
-  width: 30px; height: 18px; border-radius: 9px; background: var(--trait); position: relative; flex: none; transition: background .15s;
-}
-.bascule .interrupteur::after {
-  content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%;
-  background: var(--surface); transition: transform .15s; box-shadow: 0 1px 2px rgb(0 0 0 / 25%);
-}
-.bascule[aria-pressed="true"] .interrupteur { background: var(--accent); }
-.bascule[aria-pressed="true"] .interrupteur::after { transform: translateX(12px); }
-.bascule .n { margin-left: auto; font: 500 13px var(--mono); color: var(--discret); font-variant-numeric: tabular-nums; }
-
-.segments { display: flex; flex-wrap: wrap; gap: 6px; }
-.segment {
-  padding: 6px 12px; border-radius: 999px; border: 1px solid var(--trait); background: transparent;
-  font-size: 13px; font-weight: 500; cursor: pointer;
-}
-.segment:hover { border-color: var(--pale); }
-.segment[aria-pressed="true"] { background: var(--encre); border-color: var(--encre); color: var(--fond); }
-
-.parc-carte { background: var(--surface); border: 1px solid var(--trait); border-radius: 12px; padding: 14px; }
-.parc-carte p { margin: 0 0 12px; font-size: 14px; color: var(--discret); }
-.parc-carte p b { color: var(--encre); }
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 16px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 15px; border-radius: 8px;
   border: 1px solid var(--accent); background: var(--accent); color: var(--surface); font-weight: 600; font-size: 14px; cursor: pointer;
 }
-.btn:hover { filter: brightness(1.08); }
+.btn:hover { filter: brightness(1.1); }
 .btn.discret { background: transparent; color: var(--accent); }
-.btn.large { width: 100%; }
 
-details.aide { font-size: 13px; color: var(--discret); }
-details.aide summary { cursor: pointer; font-weight: 600; color: var(--encre); }
-details.aide dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; margin: 12px 0; }
-details.aide dt { font-weight: 700; font-family: var(--mono); }
-details.aide dd { margin: 0; }
-details.aide p { margin: 8px 0; }
-
-/* --- Fil de lecture --- */
-.flux { min-width: 0; padding-top: 32px; }
-.flux-tete {
-  position: sticky; top: 0; z-index: 5; padding: 14px 0; margin-bottom: 8px;
-  background: linear-gradient(var(--fond) 80%, transparent);
-}
-.titre-jour { margin: 0 0 14px; font: 700 clamp(22px, 2.6vw, 30px)/1.15 var(--titre); font-stretch: 90%; text-wrap: balance; }
-.titre-jour .rouge { color: var(--p1); } .titre-jour .orange { color: var(--p2); }
-.titre-jour small { display: block; margin-top: 6px; font: 400 15px var(--texte); color: var(--discret); }
-.recherche { position: relative; }
-.recherche svg { position: absolute; left: 14px; top: 50%; translate: 0 -50%; width: 18px; height: 18px; color: var(--pale); pointer-events: none; }
-.recherche input {
-  width: 100%; padding: 12px 14px 12px 42px; border: 1px solid var(--trait); border-radius: 12px; background: var(--surface);
-  color: var(--encre); font: inherit; font-size: 15px; box-shadow: var(--ombre);
-}
-.recherche input::placeholder { color: var(--pale); }
-.recherche input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
-
+#bandeaux:empty { display: none; }
+#bandeaux { padding-top: 16px; }
 .bandeau {
-  display: flex; gap: 10px; align-items: flex-start; padding: 12px 16px; margin: 0 0 12px; border-radius: 12px;
+  display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; padding: 12px 16px; margin-bottom: 8px; border-radius: 10px;
   font-size: 14px; background: color-mix(in srgb, var(--p2) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--p2) 35%, transparent);
 }
-.bandeau.info { background: var(--accent-doux); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
-.bandeau button { margin-left: auto; flex: none; }
+.bandeau.info { background: var(--accent-doux); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+.bandeau span { flex: 1 1 320px; }
 
-.section {
-  display: flex; align-items: baseline; gap: 12px; margin: 30px 0 12px; padding-bottom: 8px;
-  border-bottom: 2px solid var(--c); font: 700 15px var(--titre); font-stretch: 90%; letter-spacing: 0.06em; text-transform: uppercase;
-}
-.section:first-child { margin-top: 8px; }
-.section .code { color: var(--c); }
-.section .n { margin-left: auto; font: 600 14px var(--mono); color: var(--discret); letter-spacing: 0; }
-.section[data-p="1"] { --c: var(--p1); } .section[data-p="2"] { --c: var(--p2); }
-.section[data-p="3"] { --c: var(--p3); } .section[data-p="4"] { --c: var(--p4); }
+/* --- Vues --- */
+.vue { display: grid; gap: 40px; padding-block: 24px 64px; }
+.vue-actualites { grid-template-columns: minmax(0, 1fr) 300px; }
+.vue-vulnerabilites { grid-template-columns: 250px minmax(0, 1fr); }
+.colonne { min-width: 0; }
 
-.liste { display: flex; flex-direction: column; gap: 10px; }
-.carte {
-  position: relative; background: var(--surface); border: 1px solid var(--trait); border-radius: 14px;
-  padding: 16px 20px 16px 24px; box-shadow: var(--ombre); overflow: hidden; min-width: 0;
+.outils { display: grid; gap: 12px; margin-bottom: 8px; }
+.recherche { position: relative; display: block; }
+.recherche svg { position: absolute; left: 13px; top: 50%; translate: 0 -50%; width: 18px; height: 18px; color: var(--pale); pointer-events: none; }
+.recherche input {
+  width: 100%; padding: 11px 14px 11px 40px; border: 1px solid var(--trait); border-radius: 10px; background: var(--surface);
+  color: var(--encre); font: inherit; font-size: 15px;
 }
-.carte::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--c); }
-.carte[data-p="1"] { --c: var(--p1); background: color-mix(in srgb, var(--p1) 4%, var(--surface)); }
-.carte[data-p="2"] { --c: var(--p2); } .carte[data-p="3"] { --c: var(--p3); } .carte[data-p="4"] { --c: var(--p4); }
-.carte-haut { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 13px; color: var(--discret); }
-.carte-haut .id { font: 600 14px var(--mono); color: var(--encre); text-decoration: none; }
-.carte-haut .id:hover { color: var(--accent); text-decoration: underline; }
-.carte-haut .quand { margin-left: auto; white-space: nowrap; }
-.carte-titre { margin: 6px 0 0; font: 600 18px/1.3 var(--texte); overflow-wrap: anywhere; text-wrap: pretty; }
+.recherche input::placeholder { color: var(--pale); }
+.recherche input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.filtres-rapides { display: flex; flex-wrap: wrap; gap: 6px; }
+.filtre {
+  padding: 6px 13px; border-radius: 999px; border: 1px solid var(--trait); background: var(--surface);
+  font-size: 14px; font-weight: 500; cursor: pointer; color: var(--discret);
+}
+.filtre:hover { color: var(--encre); border-color: var(--pale); }
+.filtre[aria-pressed="true"] { background: var(--encre); border-color: var(--encre); color: var(--fond); }
+.filtre .n { margin-left: 6px; opacity: .7; }
+
+/* --- La main courante : marge horodatée, liseré rouge --- */
+.fil { position: relative; }
+.fil::before { content: ""; position: absolute; top: 0; bottom: 0; left: 72px; width: 1px; background: var(--marge); }
+.jour {
+  position: sticky; top: 0; z-index: 2; margin: 0; padding: 22px 0 10px 88px; background: var(--fond);
+  font: 600 20px/1.2 var(--titre); border-bottom: 1px solid var(--trait);
+}
+.jour .n { margin-left: 10px; font: 400 14px var(--texte); color: var(--pale); }
+.entree { display: grid; grid-template-columns: 72px minmax(0, 1fr); border-bottom: 1px solid var(--trait); }
+.entree .marge { padding: 18px 14px 0 0; text-align: right; font-size: 14px; color: var(--discret); position: relative; }
+.entree .contenu { padding: 16px 0 18px 16px; min-width: 0; }
+.entree.neuve .marge::after {
+  content: ""; position: absolute; right: -4px; top: 24px; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--neuf); box-shadow: 0 0 0 3px var(--fond);
+}
+.provenance { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; font-size: 14px; color: var(--discret); }
+.provenance .source { font-weight: 600; color: var(--encre); }
+.titre-actu { margin: 4px 0 0; font: 600 21px/1.28 var(--titre); text-wrap: pretty; overflow-wrap: anywhere; }
+.titre-actu a { color: var(--encre); text-decoration: none; }
+.titre-actu a:hover { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.titre-actu a:visited { color: var(--discret); }
+.resume {
+  margin: 6px 0 0; color: var(--discret); font-size: 15px; max-width: 72ch; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .etiquettes { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .etiquettes:empty { display: none; }
 .tag {
-  display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 3px 9px;
-  border-radius: 999px; white-space: nowrap; background: var(--surface-2); color: var(--discret);
+  display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; padding: 2px 9px;
+  border-radius: 6px; white-space: nowrap; background: var(--surface-2); color: var(--discret); border: 0; text-decoration: none;
 }
-.tag.exploitee { background: var(--p1); color: #fff; }
-.tag.rancon { background: color-mix(in srgb, var(--p1) 14%, transparent); color: var(--p1); }
-.tag.neuf { background: color-mix(in srgb, var(--neuf) 15%, transparent); color: var(--neuf); }
+.tag.urgent { background: var(--p1); color: #fff; }
+.tag.alerte { background: color-mix(in srgb, var(--p1) 13%, transparent); color: var(--p1); }
+.tag.neuf { background: color-mix(in srgb, var(--neuf) 14%, transparent); color: var(--neuf); }
 .tag.mot { background: var(--accent-doux); color: var(--accent); }
 .tag.mot::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+button.tag, a.tag { cursor: pointer; }
+button.tag:hover, a.tag:hover { text-decoration: underline; }
+.tag .prio { padding: 0 5px; border-radius: 4px; background: var(--c, var(--p4)); color: #fff; font-size: 11px; }
 
-.desc { margin: 10px 0 0; color: var(--discret); font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; max-width: 78ch; }
-.desc.replie { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.carte.sans-titre .desc { color: var(--encre); font-size: 16px; }
-.lire { margin-top: 4px; padding: 0; border: 0; background: none; color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; }
-.lire:hover { text-decoration: underline; }
+.plus { display: flex; justify-content: center; padding-top: 20px; }
+.vide { padding: 48px 16px 48px 88px; color: var(--discret); }
+.vide b { display: block; font: 600 20px var(--titre); color: var(--encre); margin-bottom: 4px; }
+.squelette { height: 96px; margin: 0 0 10px 88px; border-radius: 8px; background: var(--surface-2); animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .5; } }
 
-.mesures {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; margin-top: 14px; padding-top: 12px;
-  border-top: 1px dashed var(--trait); font-size: 13px; color: var(--discret);
+/* --- Colonne latérale des actualités --- */
+.colonne-laterale { display: grid; gap: 28px; align-content: start; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; scrollbar-width: none; }
+.encart h2 { margin: 0 0 10px; font: 600 20px var(--titre); }
+.urgences { background: var(--surface); border: 1px solid var(--trait); border-top: 3px solid var(--p1); border-radius: 10px; padding: 16px 16px 12px; }
+.urgences ol { list-style: none; margin: 0; padding: 0; }
+.urgences li + li { border-top: 1px solid var(--trait); }
+.urgences li a { display: block; padding: 9px 0; text-decoration: none; color: var(--encre); }
+.urgences li a:hover .u-titre { color: var(--accent); text-decoration: underline; }
+.u-titre { display: block; font-weight: 600; font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+.u-raison { display: block; margin-top: 2px; font-size: 13px; color: var(--p1); }
+.urgences .tout { display: inline-block; margin-top: 8px; font-size: 14px; font-weight: 600; }
+.urgences .rien { margin: 0; font-size: 14px; color: var(--discret); }
+.sources { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.sources button {
+  width: 100%; display: flex; align-items: baseline; gap: 8px; padding: 5px 8px; border: 0; border-radius: 6px;
+  background: transparent; text-align: left; cursor: pointer; font-size: 14px;
 }
-.mesure { display: inline-flex; align-items: center; gap: 8px; }
-.mesure b { font: 600 13px var(--mono); color: var(--encre); font-variant-numeric: tabular-nums; }
-.jauge { width: 64px; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+.sources button:hover { background: var(--surface-2); }
+.sources button[aria-pressed="false"] { color: var(--pale); text-decoration: line-through; }
+.sources .langue { font-size: 12px; color: var(--pale); }
+.sources .n { margin-left: auto; color: var(--discret); }
+.sources .hs { margin-left: auto; color: var(--p2); font-size: 12px; }
+.note { margin: 8px 0 0; font-size: 13px; color: var(--pale); }
+
+/* --- Vulnérabilités --- */
+.panneau { position: sticky; top: 16px; align-self: start; display: grid; gap: 22px; max-height: calc(100vh - 32px); overflow-y: auto; scrollbar-width: none; }
+.bloc h2 { margin: 0 0 8px; font-size: 14px; font-weight: 700; color: var(--discret); }
+.prios { display: grid; gap: 4px; }
+.prio-btn {
+  display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px; width: 100%;
+  padding: 7px 10px; border: 1px solid transparent; border-radius: 8px; background: transparent; cursor: pointer; text-align: left;
+}
+.prio-btn:hover { background: var(--surface); }
+.prio-btn[aria-pressed="true"] { background: var(--surface); border-color: var(--trait); }
+.prio-btn[aria-pressed="false"] { opacity: .45; }
+.prio-btn .code { font-weight: 700; font-size: 13px; color: #fff; background: var(--c); border-radius: 5px; text-align: center; padding: 2px 0; }
+.prio-btn .lib { font-size: 15px; font-weight: 500; }
+.prio-btn .n { font-weight: 600; color: var(--c); }
+[data-p="1"] { --c: var(--p1); } [data-p="2"] { --c: var(--p2); } [data-p="3"] { --c: var(--p3); } [data-p="4"] { --c: var(--p4); }
+.bascules, .segments { display: flex; flex-wrap: wrap; gap: 6px; }
+details.aide { font-size: 14px; color: var(--discret); }
+details.aide summary { cursor: pointer; font-weight: 600; color: var(--encre); }
+details.aide dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; margin: 12px 0; }
+details.aide dt { font-weight: 700; }
+details.aide dd, details.aide p { margin: 0; }
+details.aide p + p { margin-top: 8px; }
+
+.resume-jour { margin: 0 0 16px; font: 600 clamp(24px, 2.6vw, 32px)/1.15 var(--titre); text-wrap: balance; }
+.resume-jour small { display: block; margin-top: 6px; font: 400 15px var(--texte); color: var(--discret); }
+.section {
+  position: sticky; top: 0; z-index: 2; margin: 0; padding: 22px 0 10px 88px; background: var(--fond);
+  font: 600 20px/1.2 var(--titre); border-bottom: 2px solid var(--c);
+}
+.section .n { margin-left: 10px; font: 400 14px var(--texte); color: var(--pale); }
+.entree.vuln .marge { padding-top: 18px; }
+.marque-prio {
+  display: inline-block; min-width: 34px; padding: 3px 0; border-radius: 6px; text-align: center;
+  font-weight: 700; font-size: 14px; color: #fff; background: var(--c);
+}
+.entree.vuln[data-p="1"] .contenu { background: linear-gradient(90deg, color-mix(in srgb, var(--p1) 6%, transparent), transparent 70%); }
+.provenance .id { font-weight: 700; color: var(--encre); text-decoration: none; }
+.provenance .id:hover { color: var(--accent); text-decoration: underline; }
+.titre-vuln { margin: 4px 0 0; font: 600 18px/1.32 var(--texte); overflow-wrap: anywhere; text-wrap: pretty; }
+.desc { margin: 8px 0 0; color: var(--discret); font-size: 15px; max-width: 76ch; overflow-wrap: anywhere; }
+.desc.replie { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.entree.sans-titre .desc { color: var(--encre); }
+.lire { margin-top: 2px; padding: 0; border: 0; background: none; color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; }
+.lire:hover { text-decoration: underline; }
+.mesures { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 22px; margin-top: 12px; font-size: 14px; color: var(--discret); }
+.mesure { display: inline-flex; align-items: center; gap: 7px; }
+.mesure b { font-weight: 700; color: var(--encre); }
+.jauge { width: 60px; height: 6px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
 .jauge span { display: block; height: 100%; border-radius: 3px; background: var(--g); }
 .mesure.critique { --g: var(--p1); } .mesure.haute { --g: var(--p2); } .mesure.moyenne { --g: var(--p3); } .mesure.basse { --g: var(--p4); }
-.mesure.alerte b { color: var(--p1); }
-.mesure.alerte { color: var(--p1); font-weight: 600; }
-
-.vide { text-align: center; color: var(--discret); padding: 56px 16px; }
-.vide b { display: block; font: 700 20px var(--titre); color: var(--encre); margin-bottom: 6px; }
-.plus { align-self: center; margin-top: 18px; }
-.squelette { height: 132px; border-radius: 14px; background: linear-gradient(90deg, var(--surface) 0%, var(--surface-2) 50%, var(--surface) 100%);
-  background-size: 200% 100%; animation: brille 1.4s linear infinite; }
-@keyframes brille { to { background-position: -200% 0; } }
+.mesure.alerte, .mesure.alerte b { color: var(--p1); font-weight: 600; }
 
 /* --- Fenêtre Mon parc --- */
 dialog {
-  width: min(560px, calc(100vw - 32px)); padding: 0; border: 1px solid var(--trait); border-radius: 16px;
-  background: var(--surface); color: var(--encre); box-shadow: 0 24px 64px rgb(0 0 0 / 30%);
+  width: min(560px, calc(100vw - 32px)); padding: 0; border: 1px solid var(--trait); border-radius: 14px;
+  background: var(--surface); color: var(--encre); box-shadow: 0 24px 64px rgb(0 0 0 / 28%);
 }
-dialog::backdrop { background: rgb(10 14 21 / 55%); backdrop-filter: blur(3px); }
+dialog::backdrop { background: rgb(15 20 18 / 55%); backdrop-filter: blur(3px); }
 .dialogue { padding: 24px; display: grid; gap: 14px; }
-.dialogue h2 { margin: 0; font: 800 24px var(--titre); font-stretch: 85%; text-transform: uppercase; }
-.dialogue p { margin: 0; font-size: 14px; color: var(--discret); }
-.dialogue .confidentiel { display: flex; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--accent-doux); color: var(--encre); }
+.dialogue h2 { margin: 0; font: 600 26px var(--titre); }
+.dialogue p { margin: 0; font-size: 15px; color: var(--discret); }
+.dialogue .confidentiel { padding: 10px 12px; border-radius: 8px; background: var(--accent-doux); color: var(--encre); }
 .dialogue textarea {
-  width: 100%; min-height: 260px; padding: 12px; border: 1px solid var(--trait); border-radius: 10px;
-  background: var(--surface-2); color: var(--encre); font: 14px/1.6 var(--mono); resize: vertical;
+  width: 100%; min-height: 240px; padding: 12px; border: 1px solid var(--trait); border-radius: 8px;
+  background: var(--fond); color: var(--encre); font: 15px/1.6 var(--texte); resize: vertical;
 }
 .dialogue .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .dialogue .actions .gauche { margin-right: auto; }
 
 /* --- Petits écrans --- */
 @media (max-width: 960px) {
-  .app { grid-template-columns: minmax(0, 1fr); gap: 0;
-    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-  .panneau { position: static; max-height: none; overflow: visible; padding-block: 24px 0; gap: 18px; }
-  .marque { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
-  .marque h1 { font-size: 28px; }
-  .marque .fraicheur { margin: 0; }
-  .marque h1 br { display: none; }
-  /* Filtres compacts : le fil doit apparaître dès le premier écran */
-  .bloc h2 { display: none; }
+  .vue-actualites, .vue-vulnerabilites { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .colonne-laterale, .panneau { position: static; max-height: none; overflow: visible; }
+  .colonne-laterale { order: -1; }
+  .encart-sources { display: none; }
+  .urgences li:nth-child(n+4) { display: none; }
+  .panneau { gap: 14px; }
+  .bloc h2, details.aide { display: none; }
   .prios { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .prio-btn { grid-template-columns: 1fr; justify-items: center; gap: 4px; padding: 8px 4px; }
+  .prio-btn { grid-template-columns: 1fr; justify-items: center; gap: 2px; padding: 8px 4px; background: var(--surface); border-color: var(--trait); }
   .prio-btn .lib { display: none; }
-  .prio-btn .n { font-size: 13px; }
-  .bascules { display: flex; flex-wrap: wrap; gap: 6px; }
-  .bascule { width: auto; padding: 6px 10px; gap: 8px; font-size: 13px; background: var(--surface); border-color: var(--trait); }
-  .bascule .interrupteur { width: 24px; height: 14px; }
-  .bascule .interrupteur::after { width: 10px; height: 10px; }
-  .bascule[aria-pressed="true"] .interrupteur::after { transform: translateX(10px); }
-  .bascule .n { margin-left: 2px; }
-  .parc-carte { padding: 0; border: 0; background: none; }
-  .parc-carte p { display: none; }
-  .parc-carte .btn { width: 100%; padding: 8px 12px; background: transparent; color: var(--accent); }
-  .bandeau { flex-wrap: wrap; }
-  .bandeau button { margin-left: 0; }
-  details.aide { order: 10; }
-  .flux { padding-top: 8px; }
-  .flux-tete { position: static; background: none; }
+  .prio-btn .code { width: 30px; }
 }
-@media (max-width: 480px) {
-  .carte { padding: 14px 16px 14px 20px; }
-  .carte-titre { font-size: 17px; }
-  .carte-haut .quand { margin-left: 0; }
+@media (max-width: 640px) {
+  .page { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .barre-haut .page { gap: 10px; }
+  .onglets { order: 3; width: 100%; margin: 0; }
+  .onglet { flex: 1; justify-content: center; }
+  .identite { margin-right: auto; }
+  .fil::before { left: 50px; }
+  .entree { grid-template-columns: 50px minmax(0, 1fr); }
+  .entree .marge { padding-right: 10px; font-size: 13px; }
+  .entree .contenu { padding-left: 12px; }
+  .jour, .section { padding-left: 62px; font-size: 18px; }
+  .vide { padding-left: 62px; }
+  .squelette { margin-left: 62px; }
+  .titre-actu { font-size: 19px; }
+  .marque-prio { min-width: 30px; font-size: 13px; }
 }
 </style>
 </head>
 <body>
-<div class="app">
-  <aside class="panneau" aria-label="Filtres">
-    <div class="marque">
-      <h1>Veille<br> <span>vulnérabilités</span></h1>
-      <p class="fraicheur" id="fraicheur"><span class="point"></span><span id="fraicheur-texte">Chargement…</span></p>
-    </div>
-
-    <section class="bloc">
-      <h2>Priorité</h2>
-      <div class="prios" id="filtre-prio"></div>
-    </section>
-
-    <section class="bloc">
-      <h2>Afficher seulement</h2>
-      <div class="bascules" id="bascules"></div>
-    </section>
-
-    <section class="bloc">
-      <h2>Source</h2>
-      <div class="segments" id="filtre-source"></div>
-    </section>
-
-    <section class="bloc">
-      <h2>Mon parc</h2>
-      <div class="parc-carte">
-        <p id="parc-resume">Liste d'exemple.</p>
-        <button class="btn large" id="ouvrir-parc" type="button">Modifier mon parc</button>
+<header class="barre-haut">
+  <div class="page">
+    <div class="identite">
+      <img src="favicon.svg" alt="">
+      <div>
+        <h1>Veille cyber</h1>
+        <p class="fraicheur" id="fraicheur"><span class="point"></span><span id="fraicheur-texte">Chargement…</span></p>
       </div>
-    </section>
-
-    <details class="aide">
-      <summary>Comment lire ce tableau</summary>
-      <dl>
-        <dt>P1</dt><dd>Alerte CERT-FR, ou votre parc exploité activement, CVSS ≥ 9 ou EPSS ≥ 50 %. À traiter immédiatement.</dd>
-        <dt>P2</dt><dd>Exploitée hors de votre parc, ou votre parc avec CVSS ≥ 7, EPSS ≥ 10 % ou avis CERT-FR. Correctif à planifier.</dd>
-        <dt>P3</dt><dd>Concerne votre parc, gravité modérée ou pas encore notée.</dd>
-        <dt>P4</dt><dd>Hors de votre parc, pour information.</dd>
-      </dl>
-      <p><b>CVSS</b> : gravité de 0 à 10. <b>EPSS</b> : probabilité d'exploitation dans les 30 jours.
-         <b>Exploitée</b> : au catalogue KEV de la CISA, avec l'échéance imposée aux agences américaines.</p>
-      <p>La correspondance avec votre parc se fait par mots-clés : vérifiez les versions dans l'avis de l'éditeur.</p>
-      <p>Sources : <a href="https://www.cert.cyber.gouv.fr/" target="_blank" rel="noopener">CERT-FR</a> ·
-        <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener">CISA KEV</a> ·
-        <a href="https://nvd.nist.gov/" target="_blank" rel="noopener">NVD</a> ·
-        <a href="https://www.first.org/epss/" target="_blank" rel="noopener">EPSS</a></p>
-    </details>
-  </aside>
-
-  <main class="flux">
-    <div class="flux-tete">
-      <h2 class="titre-jour" id="titre-jour">Chargement de la veille…</h2>
-      <label class="recherche">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" id="recherche" placeholder="Rechercher une CVE, un produit, un éditeur…" aria-label="Rechercher">
-      </label>
     </div>
-    <div id="bandeaux"></div>
-    <div class="liste" id="liste">
-      <div class="squelette"></div><div class="squelette"></div><div class="squelette"></div>
+    <nav class="onglets" role="tablist" aria-label="Rubriques">
+      <a class="onglet" id="onglet-actualites" href="#actualites" role="tab" aria-controls="vue-actualites">Actualités <span class="pastille" id="pastille-actus"></span></a>
+      <a class="onglet" id="onglet-vulnerabilites" href="#vulnerabilites" role="tab" aria-controls="vue-vulnerabilites">Vulnérabilités <span class="pastille urgente" id="pastille-vulns"></span></a>
+    </nav>
+    <button class="btn discret" id="ouvrir-parc" type="button">Mon parc</button>
+  </div>
+</header>
+
+<div class="page" id="bandeaux"></div>
+
+<main>
+  <section class="vue vue-actualites page" id="vue-actualites" role="tabpanel" aria-labelledby="onglet-actualites">
+    <div class="colonne">
+      <div class="outils">
+        <label class="recherche">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="search" id="recherche-actus" placeholder="Rechercher dans les actualités" aria-label="Rechercher dans les actualités">
+        </label>
+        <div class="filtres-rapides" id="filtres-actus"></div>
+      </div>
+      <div class="fil" id="fil-actus"><div class="squelette"></div><div class="squelette"></div><div class="squelette"></div></div>
     </div>
-  </main>
-</div>
+    <aside class="colonne-laterale">
+      <section class="encart urgences" aria-labelledby="titre-urgences">
+        <h2 id="titre-urgences">À traiter maintenant</h2>
+        <ol id="liste-urgences"></ol>
+        <a class="tout" id="voir-urgences" href="#vulnerabilites"></a>
+      </section>
+      <section class="encart encart-sources" aria-labelledby="titre-sources">
+        <h2 id="titre-sources">Sources</h2>
+        <ul class="sources" id="liste-sources"></ul>
+        <p class="note">Cliquez sur une source pour la masquer. Articles des 7 derniers jours.</p>
+      </section>
+    </aside>
+  </section>
+
+  <section class="vue vue-vulnerabilites page" id="vue-vulnerabilites" role="tabpanel" aria-labelledby="onglet-vulnerabilites" hidden>
+    <aside class="panneau" aria-label="Filtres des vulnérabilités">
+      <section class="bloc">
+        <h2>Priorité</h2>
+        <div class="prios" id="filtre-prio"></div>
+      </section>
+      <section class="bloc">
+        <h2>Afficher seulement</h2>
+        <div class="bascules" id="bascules"></div>
+      </section>
+      <section class="bloc">
+        <h2>Source</h2>
+        <div class="segments" id="filtre-source"></div>
+      </section>
+      <details class="aide">
+        <summary>Comment lire les priorités</summary>
+        <dl>
+          <dt>P1</dt><dd>Alerte CERT-FR, ou votre parc exploité activement, CVSS d'au moins 9 ou EPSS d'au moins 50 %. À traiter immédiatement.</dd>
+          <dt>P2</dt><dd>Exploitée hors de votre parc, ou votre parc avec CVSS d'au moins 7, EPSS d'au moins 10 % ou avis CERT-FR. Correctif à planifier.</dd>
+          <dt>P3</dt><dd>Concerne votre parc, gravité modérée ou pas encore notée.</dd>
+          <dt>P4</dt><dd>Hors de votre parc, pour information.</dd>
+        </dl>
+        <p>CVSS mesure la gravité de 0 à 10. EPSS estime la probabilité d'exploitation dans les 30 jours.
+           « Exploitée » signifie inscrite au catalogue KEV de la CISA, avec l'échéance imposée aux agences américaines.</p>
+        <p>La correspondance avec votre parc se fait par mots-clés : vérifiez les versions dans l'avis de l'éditeur.</p>
+        <p>Sources : <a href="https://www.cert.cyber.gouv.fr/" target="_blank" rel="noopener">CERT-FR</a>,
+          <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" target="_blank" rel="noopener">CISA KEV</a>,
+          <a href="https://nvd.nist.gov/" target="_blank" rel="noopener">NVD</a>,
+          <a href="https://www.first.org/epss/" target="_blank" rel="noopener">EPSS</a>.</p>
+      </details>
+    </aside>
+    <div class="colonne">
+      <h2 class="resume-jour" id="titre-jour">Chargement…</h2>
+      <div class="outils">
+        <label class="recherche">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="search" id="recherche" placeholder="Rechercher une CVE, un produit, un éditeur" aria-label="Rechercher une vulnérabilité">
+        </label>
+      </div>
+      <div class="fil" id="liste"></div>
+    </div>
+  </section>
+</main>
 
 <dialog id="dialogue-parc" aria-labelledby="titre-parc">
   <form class="dialogue" method="dialog" id="form-parc">
     <h2 id="titre-parc">Mon parc</h2>
-    <p>Un mot-clé par ligne : marques, gammes, logiciels, systèmes. Par exemple <code>FortiGate</code>, <code>Stormshield</code>, <code>Windows Server</code>.</p>
+    <p>Un mot-clé par ligne : marques, gammes, logiciels, systèmes. Par exemple FortiGate, Stormshield ou Windows Server.</p>
     <p class="confidentiel">Cette liste reste dans ce navigateur. Elle n'est jamais envoyée ni publiée, car le site est public.</p>
     <textarea id="mots" spellcheck="false" aria-label="Mots-clés de votre parc"></textarea>
     <div class="actions">
@@ -352,7 +395,7 @@ dialog::backdrop { background: rgb(10 14 21 / 55%); backdrop-filter: blur(3px); 
 
 <script src="assistant.js"></script>
 <script>
-// Liste d'exemple : à remplacer par votre propre parc depuis « Modifier mon parc »
+// Liste d'exemple, utilisée tant que « Mon parc » n'est pas renseigné
 const MOTS_EXEMPLE = [
   'Cisco', 'IOS XE', 'ASA', 'Meraki', 'Fortinet', 'FortiGate', 'FortiOS', 'FortiClient', 'FortiManager', 'FortiWeb',
   'Stormshield', 'Palo Alto', 'PAN-OS', 'GlobalProtect', 'Juniper', 'Junos', 'Aruba', 'HPE', 'Check Point', 'SonicWall',
@@ -362,7 +405,14 @@ const MOTS_EXEMPLE = [
   'Red Hat', 'Zimbra', 'Roundcube', 'GLPI'
 ];
 const PRIORITES = { 1: 'Urgent', 2: 'À planifier', 3: 'À suivre', 4: 'Pour information' };
-const SECTIONS = { 1: 'À traiter immédiatement', 2: 'Correctif à planifier', 3: 'Concerne votre parc', 4: 'Hors de votre parc' };
+const SECTIONS = { 1: 'Urgent, à traiter immédiatement', 2: 'Correctif à planifier', 3: 'Concerne votre parc', 4: 'Hors de votre parc' };
+const THEMES = {
+  'exploitee': ['Exploitée activement', 'urgent'],
+  'zero-day': ['Zero-day', 'alerte'],
+  'rancon': ['Rançongiciel', 'alerte'],
+  'fuite': ['Fuite de données', ''],
+  'hameconnage': ['Hameçonnage', ''],
+};
 const PAR_PAGE = 120;
 const $ = id => document.getElementById(id);
 
@@ -386,30 +436,40 @@ let mots = (() => {
 let parcPersonnalise = !!mots;
 if (!mots) mots = MOTS_EXEMPLE.slice();
 
-// État des filtres, mémorisé d'une visite à l'autre
+// Filtres, mémorisés d'une visite à l'autre
 const filtres = { prios: new Set([1, 2, 3]), source: '', kev: false, parc: false, neufs: false };
+const filtresActus = { parc: false, urgent: false, rancon: false, fr: false, masquees: new Set() };
 try {
   const f = JSON.parse(lire('veille-filtres-v2') || 'null');
   if (f) { filtres.prios = new Set(f.prios); filtres.source = f.source || ''; filtres.parc = !!f.parc; }
+  const a = JSON.parse(lire('veille-filtres-actus') || 'null');
+  if (a) { filtresActus.fr = !!a.fr; filtresActus.masquees = new Set(a.masquees || []); }
 } catch (e) {}
 
 let donnees = null;
 let elements = [];
+let parCve = new Map();
+let actus = [];
 let limite = PAR_PAGE;
+let limiteActus = PAR_PAGE;
 
 function construireRegex(liste) {
   const alt = liste.map(m => m.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
   return alt ? new RegExp(`(?<![\\w])(${alt})(?![\\w])`, 'gi') : null;
 }
 
-// Pour les CVE NVD, le produit visé est nommé en début de description ; la suite cite souvent
-// d'autres logiciels en passant (« ...on Apache servers ») et créerait des faux positifs
-function correspondances(d, regex, index) {
+function trouver(texte, regex, index) {
   if (!regex) return [];
-  const texte = d.sources.includes('NVD') ? `${d.produits} ${d.desc.slice(0, 250)}` : `${d.titre} ${d.produits} ${d.desc}`;
   const trouves = new Set();
   for (const m of texte.matchAll(regex)) trouves.add(index.get(m[1].toLowerCase()) || m[1]);
   return [...trouves];
+}
+
+// Pour les CVE NVD, le produit visé est nommé en début de description ; la suite cite souvent
+// d'autres logiciels en passant (« ...on Apache servers ») et créerait des faux positifs
+function correspondances(d, regex, index) {
+  const texte = d.sources.includes('NVD') ? `${d.produits} ${d.desc.slice(0, 250)}` : `${d.titre} ${d.produits} ${d.desc}`;
+  return trouver(texte, regex, index);
 }
 
 function priorite(d) {
@@ -434,37 +494,271 @@ function calculer() {
     return e;
   });
   elements.sort((a, b) => a.prio - b.prio || (b.date > a.date ? 1 : b.date < a.date ? -1 : 0) || (a.id < b.id ? -1 : 1));
-  const concernes = elements.filter(e => e.mots.length).length;
-  $('parc-resume').innerHTML = '';
-  if (parcPersonnalise) {
-    const b1 = document.createElement('b'); b1.textContent = mots.length;
-    const b2 = document.createElement('b'); b2.textContent = concernes.toLocaleString('fr-FR');
-    $('parc-resume').append(b1, ' mots-clés surveillés, ', b2, ' éléments concernés.');
-  } else {
-    $('parc-resume').textContent = 'Liste d\'exemple active. Remplacez-la par vos équipements pour des priorités justes.';
-  }
+  parCve = new Map(elements.map(e => [e.id, e]));
+
+  actus = (donnees.actualites || []).map(a => {
+    const e = { ...a };
+    e.mots = trouver(`${a.titre} ${a.resume}`, regex, index);
+    e.neuf = Date.parse(a.vu) > visitePrecedente;
+    e.recherche = [a.titre, a.resume, a.source, ...(a.cves || [])].join(' ').toLowerCase();
+    return e;
+  });
 }
 
-// --- Panneau de filtres ---
+// --- Éléments communs ---
 
-function bouton(cls, attrs) {
-  const b = document.createElement('button');
+function el(tag, cls, texte) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (texte != null) e.textContent = texte;
+  return e;
+}
+
+function bouton(cls, attrs, texte) {
+  const b = el('button', cls, texte);
   b.type = 'button';
-  b.className = cls;
   for (const [k, v] of Object.entries(attrs || {})) b.setAttribute(k, v);
   return b;
 }
 
+function nombre(n) { return n.toLocaleString('fr-FR'); }
+
+function dateFr(iso) {
+  const [a, m, j] = iso.slice(0, 10).split('-');
+  return `${j}/${m}/${a}`;
+}
+
+function cleJour(d) { return d.toLocaleDateString('fr-CA'); }
+
+function libJour(d) {
+  const auj = new Date();
+  const hier = new Date(auj.getTime() - 864e5);
+  if (cleJour(d) === cleJour(auj)) return "Aujourd'hui";
+  if (cleJour(d) === cleJour(hier)) return 'Hier';
+  const t = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+function ilYa(iso) {
+  const jours = Math.floor((Date.now() - Date.parse(iso.slice(0, 10) + 'T00:00:00Z')) / 864e5);
+  if (jours <= 0) return "aujourd'hui";
+  if (jours === 1) return 'hier';
+  if (jours < 30) return `il y a ${jours} jours`;
+  return 'le ' + dateFr(iso);
+}
+
+function raisonUrgence(d) {
+  if (d.sources.includes('CERT-FR alerte')) return 'Alerte CERT-FR';
+  if (d.kev) return d.rancon ? 'Exploitée par des rançongiciels' : 'Exploitée activement';
+  if ((d.epss || 0) >= 0.5) return `Exploitation probable (EPSS ${Math.round(d.epss * 100)} %)`;
+  if (d.cvss != null) return `Gravité ${d.cvss.toLocaleString('fr-FR')} sur 10`;
+  return 'Concerne votre parc';
+}
+
+// Ouvre une vulnérabilité précise dans l'onglet Vulnérabilités
+function voirVulnerabilite(id) {
+  $('recherche').value = id;
+  filtres.prios = new Set([1, 2, 3, 4]);
+  filtres.source = ''; filtres.kev = false; filtres.parc = false; filtres.neufs = false;
+  location.hash = 'vulnerabilites';
+  panneau(); afficher(true);
+}
+
+// --- Navigation entre les rubriques ---
+
+function montrerVue() {
+  const vue = location.hash === '#vulnerabilites' ? 'vulnerabilites' : 'actualites';
+  for (const nom of ['actualites', 'vulnerabilites']) {
+    $('vue-' + nom).hidden = nom !== vue;
+    $('onglet-' + nom).setAttribute('aria-selected', String(nom === vue));
+  }
+}
+window.addEventListener('hashchange', () => { montrerVue(); window.scrollTo(0, 0); });
+
+function entete() {
+  const nouvelles = actus.filter(a => a.neuf).length;
+  $('pastille-actus').textContent = nouvelles ? nombre(nouvelles) : '';
+  $('pastille-actus').title = `${nouvelles} depuis votre dernière visite`;
+  const p1 = elements.filter(e => e.prio === 1).length;
+  $('pastille-vulns').textContent = p1 ? nombre(p1) : '';
+  $('pastille-vulns').title = `${p1} urgentes`;
+}
+
+// --- Actualités ---
+
+function filtresRapides() {
+  const defs = [
+    ['parc', 'Mon parc', actus.filter(a => a.mots.length).length],
+    ['urgent', 'Exploitées et zero-day', actus.filter(a => a.themes.includes('exploitee') || a.themes.includes('zero-day')).length],
+    ['rancon', 'Rançongiciels', actus.filter(a => a.themes.includes('rancon')).length],
+    ['fr', 'En français', actus.filter(a => a.langue === 'fr').length],
+  ];
+  const c = $('filtres-actus');
+  c.replaceChildren();
+  for (const [cle, lib, n] of defs) {
+    const b = bouton('filtre', { 'aria-pressed': filtresActus[cle] }, lib);
+    b.appendChild(el('span', 'n', nombre(n)));
+    b.onclick = () => { filtresActus[cle] = !filtresActus[cle]; filtresRapides(); afficherActus(true); };
+    c.appendChild(b);
+  }
+}
+
+function listeSources() {
+  const ul = $('liste-sources');
+  ul.replaceChildren();
+  for (const s of donnees.sources || []) {
+    const li = el('li');
+    const b = bouton('', { 'aria-pressed': !filtresActus.masquees.has(s.nom), title: s.site });
+    b.appendChild(el('span', '', s.nom));
+    if (s.langue === 'en') b.appendChild(el('span', 'langue', 'anglais'));
+    b.appendChild(s.erreur ? el('span', 'hs', 'indisponible') : el('span', 'n', nombre(s.articles)));
+    if (s.erreur) b.title = `${s.site} : ${s.erreur}`;
+    b.onclick = () => {
+      filtresActus.masquees.has(s.nom) ? filtresActus.masquees.delete(s.nom) : filtresActus.masquees.add(s.nom);
+      listeSources(); afficherActus(true);
+    };
+    li.appendChild(b);
+    ul.appendChild(li);
+  }
+}
+
+function urgences() {
+  const p1 = elements.filter(e => e.prio === 1);
+  const ol = $('liste-urgences');
+  ol.replaceChildren();
+  if (!p1.length) {
+    const li = el('li');
+    li.appendChild(el('p', 'rien', 'Rien d\'urgent sur votre parc pour le moment.'));
+    ol.appendChild(li);
+  }
+  for (const d of p1.slice(0, 6)) {
+    const li = el('li');
+    const a = el('a');
+    a.href = '#vulnerabilites';
+    a.onclick = ev => { ev.preventDefault(); voirVulnerabilite(d.id); };
+    a.appendChild(el('span', 'u-titre', d.titre));
+    a.appendChild(el('span', 'u-raison', `${d.id}, ${raisonUrgence(d).toLowerCase()}`));
+    li.appendChild(a);
+    ol.appendChild(li);
+  }
+  const tout = $('voir-urgences');
+  tout.hidden = p1.length <= 3;
+  tout.textContent = `Voir les ${p1.length} urgences`;
+  tout.onclick = ev => {
+    ev.preventDefault();
+    filtres.prios = new Set([1]); $('recherche').value = '';
+    location.hash = 'vulnerabilites'; panneau(); afficher(true);
+  };
+}
+
+function carteActu(a) {
+  const art = el('article', 'entree' + (a.neuf ? ' neuve' : ''));
+  const marge = el('div', 'marge');
+  // Les bulletins datés à minuit pile (CERT-FR) n'ont pas d'heure réelle
+  if (!a.date.endsWith('T00:00:00Z')) {
+    const heure = new Date(a.date).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const t = el('time', '', heure);
+    t.dateTime = a.date;
+    marge.appendChild(t);
+  }
+  art.appendChild(marge);
+
+  const c = el('div', 'contenu');
+  const prov = el('p', 'provenance');
+  prov.appendChild(el('span', 'source', a.source));
+  if (a.langue === 'en') prov.appendChild(el('span', '', 'en anglais'));
+  if (a.neuf) marge.title = 'Nouveau depuis votre dernière visite';
+  c.appendChild(prov);
+
+  const h = el('h3', 'titre-actu');
+  const lien = el('a', '', a.titre);
+  lien.href = a.lien; lien.target = '_blank'; lien.rel = 'noopener';
+  h.appendChild(lien);
+  c.appendChild(h);
+  if (a.resume && a.resume !== a.titre) c.appendChild(el('p', 'resume', a.resume));
+
+  const et = el('div', 'etiquettes');
+  for (const t of a.themes || []) { const [lib, cls] = THEMES[t] || [t, '']; et.appendChild(el('span', 'tag ' + cls, lib)); }
+  for (const m of a.mots) et.appendChild(el('span', 'tag mot', m));
+  for (const id of (a.cves || []).slice(0, 4)) {
+    const v = parCve.get(id);
+    if (v) {
+      const b = bouton('tag', { title: 'Voir cette vulnérabilité' }, id);
+      const p = el('span', 'prio', 'P' + v.prio);
+      p.dataset.p = v.prio;
+      b.appendChild(p);
+      b.onclick = () => voirVulnerabilite(id);
+      et.appendChild(b);
+    } else {
+      const l = el('a', 'tag', id);
+      l.href = 'https://nvd.nist.gov/vuln/detail/' + id; l.target = '_blank'; l.rel = 'noopener';
+      et.appendChild(l);
+    }
+  }
+  c.appendChild(et);
+  art.appendChild(c);
+  return art;
+}
+
+function afficherActus(reinit) {
+  if (!donnees) return;
+  if (reinit) limiteActus = PAR_PAGE;
+  ecrire('veille-filtres-actus', JSON.stringify({ fr: filtresActus.fr, masquees: [...filtresActus.masquees] }));
+  const q = $('recherche-actus').value.trim().toLowerCase();
+  const res = actus.filter(a =>
+    !filtresActus.masquees.has(a.source) &&
+    (!filtresActus.parc || a.mots.length) &&
+    (!filtresActus.urgent || a.themes.includes('exploitee') || a.themes.includes('zero-day')) &&
+    (!filtresActus.rancon || a.themes.includes('rancon')) &&
+    (!filtresActus.fr || a.langue === 'fr') &&
+    (!q || a.recherche.includes(q))
+  );
+  const fil = $('fil-actus');
+  fil.replaceChildren();
+  if (!res.length) {
+    const v = el('div', 'vide');
+    v.appendChild(el('b', '', 'Aucun article'));
+    v.append('Aucune actualité ne correspond à ces filtres. Retirez un filtre ou videz la recherche.');
+    fil.appendChild(v);
+    return;
+  }
+  const parJour = new Map();
+  for (const a of res) { const k = cleJour(new Date(a.date)); parJour.set(k, (parJour.get(k) || 0) + 1); }
+  const frag = document.createDocumentFragment();
+  let jour = '';
+  for (const a of res.slice(0, limiteActus)) {
+    const d = new Date(a.date);
+    if (cleJour(d) !== jour) {
+      jour = cleJour(d);
+      const h = el('h2', 'jour', libJour(d));
+      const n = parJour.get(jour);
+      h.appendChild(el('span', 'n', `${n} article${n > 1 ? 's' : ''}`));
+      frag.appendChild(h);
+    }
+    frag.appendChild(carteActu(a));
+  }
+  fil.appendChild(frag);
+  if (res.length > limiteActus) {
+    const p = el('div', 'plus');
+    const b = bouton('btn discret', {}, `Afficher les articles plus anciens (${nombre(res.length - limiteActus)})`);
+    b.onclick = () => { limiteActus += PAR_PAGE; afficherActus(false); };
+    p.appendChild(b);
+    fil.appendChild(p);
+  }
+}
+
+$('recherche-actus').addEventListener('input', () => afficherActus(true));
+
+// --- Vulnérabilités ---
+
 function panneau() {
-  const compte = p => elements.filter(e => e.prio === p).length;
   const prios = $('filtre-prio');
   prios.replaceChildren();
   for (const p of [1, 2, 3, 4]) {
     const b = bouton('prio-btn', { 'data-p': p, 'aria-pressed': filtres.prios.has(p) });
-    b.innerHTML = '<span class="code"></span><span class="lib"></span><span class="n"></span>';
-    b.querySelector('.code').textContent = 'P' + p;
-    b.querySelector('.lib').textContent = PRIORITES[p];
-    b.querySelector('.n').textContent = compte(p).toLocaleString('fr-FR');
+    b.appendChild(el('span', 'code', 'P' + p));
+    b.appendChild(el('span', 'lib', PRIORITES[p]));
+    b.appendChild(el('span', 'n', nombre(elements.filter(e => e.prio === p).length)));
     b.onclick = () => {
       filtres.prios.has(p) ? filtres.prios.delete(p) : filtres.prios.add(p);
       if (!filtres.prios.size) filtres.prios.add(p);
@@ -481,10 +775,8 @@ function panneau() {
     ['neufs', 'Nouveautés', elements.filter(e => e.neuf).length],
   ];
   for (const [cle, lib, n] of defs) {
-    const b = bouton('bascule', { 'aria-pressed': filtres[cle] });
-    b.innerHTML = '<span class="interrupteur"></span><span class="lib"></span><span class="n"></span>';
-    b.querySelector('.lib').textContent = lib;
-    b.querySelector('.n').textContent = n.toLocaleString('fr-FR');
+    const b = bouton('filtre', { 'aria-pressed': filtres[cle] }, lib);
+    b.appendChild(el('span', 'n', nombre(n)));
     b.onclick = () => { filtres[cle] = !filtres[cle]; panneau(); afficher(true); };
     bascules.appendChild(b);
   }
@@ -492,8 +784,7 @@ function panneau() {
   const sources = $('filtre-source');
   sources.replaceChildren();
   for (const [val, lib] of [['', 'Toutes'], ['CERT-FR', 'CERT-FR'], ['KEV', 'CISA KEV'], ['NVD', 'NVD']]) {
-    const b = bouton('segment', { 'aria-pressed': filtres.source === val });
-    b.textContent = lib;
+    const b = bouton('filtre', { 'aria-pressed': filtres.source === val }, lib);
     b.onclick = () => { filtres.source = val; panneau(); afficher(true); };
     sources.appendChild(b);
   }
@@ -502,116 +793,72 @@ function panneau() {
 function titreDuJour() {
   const p1 = elements.filter(e => e.prio === 1).length;
   const p2 = elements.filter(e => e.prio === 2).length;
-  const neufs1 = elements.filter(e => e.prio <= 2 && e.neuf).length;
+  const neufs = elements.filter(e => e.prio <= 2 && e.neuf).length;
   const h = $('titre-jour');
-  h.replaceChildren();
-  const s1 = document.createElement('span'); s1.className = 'rouge';
-  s1.textContent = `${p1} urgence${p1 > 1 ? 's' : ''}`;
-  const s2 = document.createElement('span'); s2.className = 'orange';
-  s2.textContent = `${p2} correctif${p2 > 1 ? 's' : ''} à planifier`;
-  h.append(s1, ' et ', s2);
-  const sm = document.createElement('small');
-  sm.textContent = neufs1
-    ? `dont ${neufs1} apparu${neufs1 > 1 ? 's' : ''} depuis votre dernière visite`
-    : 'rien de nouveau en P1 ou P2 depuis votre dernière visite';
-  h.appendChild(sm);
-}
-
-// --- Cartes ---
-
-function tag(texte, cls) {
-  const s = document.createElement('span');
-  s.className = 'tag ' + (cls || '');
-  s.textContent = texte;
-  return s;
-}
-
-function dateFr(iso) {
-  const [a, m, j] = iso.split('-');
-  return `${j}/${m}/${a}`;
-}
-
-function quand(iso) {
-  const jours = Math.floor((Date.now() - Date.parse(iso + 'T00:00:00Z')) / 864e5);
-  if (jours <= 0) return "aujourd'hui";
-  if (jours === 1) return 'hier';
-  if (jours < 30) return `il y a ${jours} j`;
-  return 'le ' + dateFr(iso);
+  h.textContent = p1
+    ? `${p1} vulnérabilité${p1 > 1 ? 's' : ''} à traiter en urgence, ${p2} correctif${p2 > 1 ? 's' : ''} à planifier`
+    : `Rien d'urgent, ${p2} correctif${p2 > 1 ? 's' : ''} à planifier`;
+  h.appendChild(el('small', '', neufs
+    ? `Dont ${neufs} apparue${neufs > 1 ? 's' : ''} depuis votre dernière visite.`
+    : 'Rien de nouveau en P1 ou P2 depuis votre dernière visite.'));
 }
 
 function mesure(lib, valeur, cls) {
-  const s = document.createElement('span');
-  s.className = 'mesure ' + (cls || '');
+  const s = el('span', 'mesure ' + (cls || ''));
   s.append(lib + ' ');
-  const b = document.createElement('b');
-  b.textContent = valeur;
-  s.appendChild(b);
+  s.appendChild(el('b', '', valeur));
   return s;
 }
 
-function carte(d) {
+function carteVuln(d) {
   const sansTitre = d.sources.includes('NVD') && !d.produits;
-  const c = document.createElement('article');
-  c.className = 'carte' + (sansTitre ? ' sans-titre' : '');
-  c.dataset.p = d.prio;
+  const art = el('article', 'entree vuln' + (sansTitre ? ' sans-titre' : '') + (d.neuf ? ' neuve' : ''));
+  art.dataset.p = d.prio;
+  const marge = el('div', 'marge');
+  marge.appendChild(el('span', 'marque-prio', 'P' + d.prio));
+  art.appendChild(marge);
 
-  const haut = document.createElement('div');
-  haut.className = 'carte-haut';
-  const a = document.createElement('a');
-  a.className = 'id';
+  const c = el('div', 'contenu');
+  const prov = el('p', 'provenance');
+  const a = el('a', 'id', d.id);
   a.href = d.lien; a.target = '_blank'; a.rel = 'noopener';
-  a.textContent = d.id;
-  const src = document.createElement('span');
-  src.textContent = d.sources.join(' · ');
-  const q = document.createElement('span');
-  q.className = 'quand';
-  q.textContent = 'Publié ' + quand(d.date);
-  q.title = dateFr(d.date);
-  haut.append(a, src, q);
-  c.appendChild(haut);
+  prov.appendChild(a);
+  prov.appendChild(el('span', '', d.sources.join(' et ')));
+  prov.appendChild(el('span', '', 'Publiée ' + ilYa(d.date)));
+  c.appendChild(prov);
 
-  if (!sansTitre) {
-    const t = document.createElement('h3');
-    t.className = 'carte-titre';
-    t.textContent = d.titre;
-    c.appendChild(t);
-  }
+  if (!sansTitre) c.appendChild(el('h3', 'titre-vuln', d.titre));
 
-  const et = document.createElement('div');
-  et.className = 'etiquettes';
-  if (d.kev) et.appendChild(tag('Exploitée activement', 'exploitee'));
-  if (d.rancon) et.appendChild(tag('Rançongiciel', 'rancon'));
-  if (d.neuf) et.appendChild(tag('Nouveau', 'neuf'));
-  for (const m of d.mots) et.appendChild(tag(m, 'mot'));
+  const et = el('div', 'etiquettes');
+  if (d.kev) et.appendChild(el('span', 'tag urgent', 'Exploitée activement'));
+  if (d.rancon) et.appendChild(el('span', 'tag alerte', 'Rançongiciel'));
+  if (d.neuf) et.appendChild(el('span', 'tag neuf', 'Nouveau'));
+  for (const m of d.mots) et.appendChild(el('span', 'tag mot', m));
   c.appendChild(et);
 
   if (d.desc && d.desc !== d.titre) {
-    const p = document.createElement('p');
-    p.className = 'desc';
-    p.textContent = d.desc;
+    const p = el('p', 'desc', d.desc);
     c.appendChild(p);
     if (d.desc.length > 180) {
       p.classList.add('replie');
-      const l = bouton('lire', { 'aria-expanded': 'false' });
-      l.textContent = 'Lire la suite';
+      const l = bouton('lire', { 'aria-expanded': 'false' }, 'Lire la suite');
       l.onclick = () => {
-        const ouvert = p.classList.toggle('replie');
-        l.textContent = ouvert ? 'Lire la suite' : 'Réduire';
-        l.setAttribute('aria-expanded', String(!ouvert));
+        const replie = p.classList.toggle('replie');
+        l.textContent = replie ? 'Lire la suite' : 'Réduire';
+        l.setAttribute('aria-expanded', String(!replie));
       };
       c.appendChild(l);
     }
   }
 
-  const m = document.createElement('div');
-  m.className = 'mesures';
+  const m = el('div', 'mesures');
   if (d.cvss != null) {
     const niv = d.cvss >= 9 ? 'critique' : d.cvss >= 7 ? 'haute' : d.cvss >= 4 ? 'moyenne' : 'basse';
-    const s = mesure('CVSS', d.cvss.toFixed(1), niv);
-    const j = document.createElement('span');
-    j.className = 'jauge';
-    j.innerHTML = '<span></span>';
-    j.firstChild.style.width = (d.cvss * 10) + '%';
+    const s = mesure('CVSS', d.cvss.toLocaleString('fr-FR', { minimumFractionDigits: 1 }), niv);
+    const j = el('span', 'jauge');
+    const r = el('span');
+    r.style.width = (d.cvss * 10) + '%';
+    j.appendChild(r);
     s.appendChild(j);
     m.appendChild(s);
   } else {
@@ -623,21 +870,11 @@ function carte(d) {
   }
   if (d.echeance) {
     const depassee = Date.parse(d.echeance + 'T23:59:59Z') < Date.now();
-    m.appendChild(mesure(depassee ? 'Échéance CISA dépassée' : 'Échéance CISA', dateFr(d.echeance), depassee ? 'alerte' : ''));
+    m.appendChild(mesure(depassee ? 'Échéance CISA dépassée le' : 'Échéance CISA', dateFr(d.echeance), depassee ? 'alerte' : ''));
   }
   c.appendChild(m);
-  return c;
-}
-
-function section(p, n) {
-  const h = document.createElement('h2');
-  h.className = 'section';
-  h.dataset.p = p;
-  h.innerHTML = '<span class="code"></span><span class="lib"></span><span class="n"></span>';
-  h.querySelector('.code').textContent = 'P' + p;
-  h.querySelector('.lib').textContent = SECTIONS[p];
-  h.querySelector('.n').textContent = n.toLocaleString('fr-FR');
-  return h;
+  art.appendChild(c);
+  return art;
 }
 
 function afficher(reinit) {
@@ -658,9 +895,9 @@ function afficher(reinit) {
   const liste = $('liste');
   liste.replaceChildren();
   if (!res.length) {
-    const v = document.createElement('div');
-    v.className = 'vide';
-    v.innerHTML = '<b>Rien à signaler</b>Aucun élément ne correspond à ces filtres. Ajoutez des priorités ou videz la recherche.';
+    const v = el('div', 'vide');
+    v.appendChild(el('b', '', 'Rien à signaler'));
+    v.append('Aucune vulnérabilité ne correspond à ces filtres. Ajoutez des priorités ou videz la recherche.');
     liste.appendChild(v);
     return;
   }
@@ -670,32 +907,44 @@ function afficher(reinit) {
   const frag = document.createDocumentFragment();
   let courante = 0;
   for (const d of res.slice(0, limite)) {
-    if (d.prio !== courante) { courante = d.prio; frag.appendChild(section(courante, parPrio[courante])); }
-    frag.appendChild(carte(d));
+    if (d.prio !== courante) {
+      courante = d.prio;
+      const h = el('h2', 'section', SECTIONS[courante]);
+      h.dataset.p = courante;
+      h.appendChild(el('span', 'n', nombre(parPrio[courante])));
+      frag.appendChild(h);
+    }
+    frag.appendChild(carteVuln(d));
   }
   liste.appendChild(frag);
   if (res.length > limite) {
-    const b = bouton('btn discret plus');
-    b.textContent = `Afficher ${Math.min(PAR_PAGE, res.length - limite)} de plus (${(res.length - limite).toLocaleString('fr-FR')} restants)`;
+    const p = el('div', 'plus');
+    const b = bouton('btn discret', {}, `Afficher ${Math.min(PAR_PAGE, res.length - limite)} de plus (${nombre(res.length - limite)} restantes)`);
     b.onclick = () => { limite += PAR_PAGE; afficher(false); };
-    liste.appendChild(b);
+    p.appendChild(b);
+    liste.appendChild(p);
   }
 }
 
+$('recherche').addEventListener('input', () => afficher(true));
+
 function bandeau(texte, cls, action) {
-  const d = document.createElement('div');
-  d.className = 'bandeau ' + (cls || '');
-  const t = document.createElement('span');
-  t.textContent = texte;
-  d.appendChild(t);
+  const d = el('div', 'bandeau ' + (cls || ''));
+  d.appendChild(el('span', '', texte));
   if (action) {
-    const b = bouton('btn');
-    b.textContent = action.lib;
+    const b = bouton('btn', {}, action.lib);
     b.onclick = action.fn;
     d.appendChild(b);
   }
   $('bandeaux').appendChild(d);
   return d;
+}
+
+function toutAfficher() {
+  calculer();
+  entete();
+  filtresRapides(); listeSources(); urgences(); afficherActus(true);
+  panneau(); titreDuJour(); afficher(true);
 }
 
 // --- Mon parc ---
@@ -711,7 +960,7 @@ function enregistrerParc(liste) {
   ecrire('veille-parc', JSON.stringify(mots));
   parcPersonnalise = true;
   document.querySelector('.bandeau.info')?.remove();
-  if (donnees) { calculer(); panneau(); titreDuJour(); afficher(true); }
+  if (donnees) toutAfficher();
 }
 dialogue.addEventListener('close', () => {
   if (dialogue.returnValue !== 'ok') return;
@@ -742,9 +991,9 @@ function lancerAssistant() {
 }
 let assistantReporte = false;
 try { assistantReporte = sessionStorage.getItem('veille-assistant') === 'plus-tard'; } catch (e) {}
-if (!parcPersonnalise && !assistantReporte) lancerAssistant();
 
-$('recherche').addEventListener('input', () => afficher(true));
+montrerVue();
+if (!parcPersonnalise && !assistantReporte) lancerAssistant();
 
 fetch('donnees.json', { cache: 'no-cache' })
   .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -755,22 +1004,20 @@ fetch('donnees.json', { cache: 'no-cache' })
     const f = $('fraicheur');
     const age = heures < 1 ? `il y a ${Math.max(1, Math.round(heures * 60))} min` : `il y a ${Math.floor(heures)} h`;
     $('fraicheur-texte').textContent = `Mis à jour ${age}`;
-    f.title = `Collecte du ${genere.toLocaleString('fr-FR')} · CVE des ${d.fenetres.nvd} derniers jours, KEV et CERT-FR des ${d.fenetres.kev} derniers jours`;
+    f.title = `Collecte du ${genere.toLocaleString('fr-FR')}`;
     f.classList.add(heures < 6 ? 'ok' : heures < 12 ? 'tiede' : 'vieux');
     if (heures > 12) bandeau(`Les données datent de plus de ${Math.floor(heures)} h : la collecte automatique est peut-être en panne (onglet Actions du dépôt GitHub).`);
-    for (const e of d.erreurs || []) bandeau('Source indisponible lors de la dernière collecte : ' + e);
+    for (const e of d.erreurs || []) bandeau('Source de vulnérabilités indisponible lors de la dernière collecte : ' + e);
     if (!parcPersonnalise) bandeau('Les priorités sont calculées avec une liste d\'exemple. Renseignez vos équipements pour qu\'elles reflètent votre parc.', 'info', { lib: 'Renseigner mon parc', fn: lancerAssistant });
-    calculer();
-    panneau();
-    titreDuJour();
-    afficher(true);
+    toutAfficher();
   })
   .catch(err => {
     $('fraicheur-texte').textContent = 'Données indisponibles';
     $('fraicheur').classList.add('vieux');
     $('titre-jour').textContent = 'Veille indisponible';
+    $('fil-actus').replaceChildren();
     $('liste').replaceChildren();
-    bandeau(`Impossible de charger donnees.json (${err.message}). La première collecte n'a peut-être pas encore tourné.`);
+    bandeau(`Impossible de charger les données (${err.message}). La première collecte n'a peut-être pas encore tourné.`);
   });
 </script>
 </body>
