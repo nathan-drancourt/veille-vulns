@@ -1,6 +1,23 @@
 {
-  "_aide": "Fenetres de collecte en jours. Vos mots-cles (votre parc) ne vont PAS ici : ils se reglent dans le site et restent dans votre navigateur.",
+  "_aide": "Fenetres de collecte en jours et sources d'actualites. Vos mots-cles (votre parc) ne vont PAS ici : ils se reglent dans le site et restent dans votre navigateur.",
   "JoursNvd": 7,
   "JoursKev": 30,
-  "JoursCertFr": 30
+  "JoursCertFr": 30,
+  "JoursActualites": 7,
+  "Actualites": [
+    { "nom": "CERT-FR", "url": "https://www.cert.cyber.gouv.fr/actualite/feed/", "langue": "fr" },
+    { "nom": "CERT-FR Menaces", "url": "https://www.cert.cyber.gouv.fr/cti/feed/", "langue": "fr" },
+    { "nom": "Cybermalveillance.gouv.fr", "url": "https://www.cybermalveillance.gouv.fr/feed/atom-flux-actualites", "langue": "fr" },
+    { "nom": "ZATAZ", "url": "https://www.zataz.com/feed/", "langue": "fr" },
+    { "nom": "Le Monde Informatique", "url": "https://www.lemondeinformatique.fr/flux-rss/thematique/securite/rss.xml", "langue": "fr", "fuseau": "Europe/Paris" },
+    { "nom": "IT-Connect", "url": "https://www.it-connect.fr/feed/", "langue": "fr" },
+    { "nom": "UnderNews", "url": "https://www.undernews.fr/feed", "langue": "fr" },
+    { "nom": "BleepingComputer", "url": "https://www.bleepingcomputer.com/feed/", "langue": "en" },
+    { "nom": "The Hacker News", "url": "https://feeds.feedburner.com/TheHackersNews", "langue": "en" },
+    { "nom": "SecurityWeek", "url": "https://www.securityweek.com/feed/", "langue": "en" },
+    { "nom": "Dark Reading", "url": "https://www.darkreading.com/rss.xml", "langue": "en" },
+    { "nom": "Krebs on Security", "url": "https://krebsonsecurity.com/feed/", "langue": "en" },
+    { "nom": "SANS ISC", "url": "https://isc.sans.edu/rssfeed_full.xml", "langue": "en" },
+    { "nom": "CISA", "url": "https://www.cisa.gov/cybersecurity-advisories/all.xml", "langue": "en" }
+  ]
 }
