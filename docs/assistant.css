@@ -2,7 +2,7 @@
 dialog.assistant { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 32px); }
 .as-corps { padding: 28px; display: grid; gap: 16px; }
 .as-sur-titre { margin: 0; font-size: 14px; font-weight: 600; color: var(--accent); }
-.as-titre { margin: 0; font: 600 30px/1.1 var(--titre); text-wrap: balance; }
+.as-titre { margin: 0; font: 700 26px/1.15 var(--titre); text-wrap: balance; }
 .as-texte { margin: 0; color: var(--discret); font-size: 15px; max-width: 60ch; }
 .as-note { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--accent-doux); font-size: 14px; }
 
