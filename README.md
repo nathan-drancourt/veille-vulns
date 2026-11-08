@@ -1,5 +1,7 @@
 # Veille cyber
 
+![Aperçu du projet veille-vulns](docs/banner.png)
+
 Site de veille autonome hébergé sur GitHub Pages. Toutes les 4 heures, une GitHub Action collecte :
 
 | Source | Ce qu'elle apporte |
